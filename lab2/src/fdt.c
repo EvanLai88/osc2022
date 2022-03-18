@@ -68,33 +68,44 @@ void traverse_device_tree(void *dtb_ptr,dtb_callback callback)
             callback(token_type,0,0,0);
         }else
         {
-            uart_printf("error type:%x\n",token_type);
+            uart_puts("error type:");
+            uart_puts(token_type);
+            uart_puts("\n");
             return;
         }
     }
 }
 
-void dtb_callback_show_tree(uint32_t node_type, char *name, void *data, uint32_t name_size)
+void dtb_callback_show_tree(uint32_t node_type, char *name, void *data, uint32_t data_size)
 {
     static int level = 0;
     if(node_type==FDT_BEGIN_NODE)
     {
-        for(int i=0;i<level;i++)uart_printf("   ");
-        uart_printf("%s{\n",name);
+        for(int i=0;i<level;i++)uart_puts("   ");
+        uart_puts(name);
+        uart_puts(": {\n");
         level++;
     }else if(node_type==FDT_END_NODE)
     {
         level--;
-        for(int i=0;i<level;i++)uart_printf("   ");
-        uart_printf("}\n");
+        for(int i=0;i<level;i++)uart_puts("   ");
+        uart_puts("}\n");
     }else if(node_type==FDT_PROP)
     {
-        for(int i=0;i<level;i++)uart_printf("   ");
-        uart_printf("%s\n",name);
+        for(int i=0;i<level;i++)uart_puts("   ");
+        uart_puts(name);
+        uart_puts(": ");
+        if (data_size == 4) {
+            uart_hex(data);
+        }
+        else {
+            uart_puts(data);
+        }
+        uart_puts("\n");
     }
 }
 
-void dtb_callback_initramfs(uint32_t node_type, char *name, void *value, uint32_t name_size) {
+void dtb_callback_initramfs(uint32_t node_type, char *name, void *value, uint32_t value_size) {
     if(node_type==FDT_PROP && strcmp(name,"linux,initrd-start")==0)
     {
         CPIO_BASE = (void *)(unsigned long long)uint32_endian_big2lttle(*(uint32_t*)value);

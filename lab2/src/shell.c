@@ -70,6 +70,7 @@ void shell(){
         }
 
         if ( strcmp(cmd, "dtb list -a") == 0 ) {
+            uart_puts("dtb\n");
             traverse_device_tree(dtb_place,dtb_callback_show_tree);
             continue;
         }
