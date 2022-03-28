@@ -10,7 +10,6 @@
 #define FDT_NOP 0x00000004
 #define FDT_END 0x00000009
 
-char* dtb_place;
 extern void* CPIO_BASE; // initialize by callback dtb_callback_initramfs in main 本來是寫死的
 typedef void (*dtb_callback)(uint32_t node_type, char *name, void *value, uint32_t name_size);
 

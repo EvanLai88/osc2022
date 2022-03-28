@@ -7,6 +7,9 @@
 #define NULL ((void *)0)
 #endif
 
+void *CPIO_BASE;
+
+
 static unsigned long align_up(unsigned long n, unsigned long align)
 {
     return (n + align - 1) & (~(align - 1));

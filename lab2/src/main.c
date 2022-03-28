@@ -1,13 +1,17 @@
 #include "uart.h"
 #include "shell.h"
 
-extern char *dtb_place;
+extern char *DTB_PLACE;
 
-void main()
+void main(char *dtb)
 {
-    register unsigned long dtb asm("x18");
-
-    dtb_place = dtb;
+    DTB_PLACE = dtb;
     uart_init();
+    // uart_puts("DTB from main\n");
+    // uart_hex(test);
+    // uart_puts("\n");
+    // uart_puts("DTB from x18\n");
+    // uart_hex(dtb);
+    // uart_puts("\n");
     shell();
 }

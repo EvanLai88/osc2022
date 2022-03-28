@@ -1,7 +1,9 @@
 #include "uart.h"
 #include "lib.h"
 
-// int isRelocated = 0;
+extern unsigned long long _start;
+extern unsigned long long _end;
+extern unsigned long long __img_size;
 
 void main(void *dtb)
 {
@@ -10,13 +12,10 @@ void main(void *dtb)
     char header[BUFFER_SIZE];
     int i, length = 0;
 
-    // if (isRelocated == 0) {
-    //     isRelocated = 1;
-
     /* relocate bootloader */
     s = (char *) 0x80000;
     d = (char *) 0x60000;
-    for (i = 0;i<0x5000;i++) {
+    for (i = 0;i<&__img_size;i++) {
         *d = *s;
         s++;
         d++;
@@ -29,6 +28,7 @@ void main(void *dtb)
     );
 
     uart_init();
+    uart_getc(ECHO_OFF);
     uart_puts("\033[2J\033[H");
     uart_puts("Simple Bootloader\n");
     uart_puts("version: 0.7.0.alpha\n\n");
@@ -61,9 +61,5 @@ void main(void *dtb)
     // }
 
     /* jump to address 0x80000 */
-    asm volatile(
-        "mov    x9,     0x0000                  \n"
-        "movk   x9,     0x0008,     lsl     16  \n"
-        "BR     x9                              \n"
-    );
+    ((void (*)(char*))0x80000)(dtb);
 }

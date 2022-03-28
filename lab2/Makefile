@@ -38,16 +38,16 @@ clean:
 	rm obj/*.o >/dev/null 2>/dev/null || true
 
 run_kernel:
-	qemu-system-aarch64 -initrd initramfs.cpio -M raspi3 -kernel kernel8.img -display none -serial null -serial stdio
+	qemu-system-aarch64 -initrd initramfs.cpio -dtb bcm2710-rpi-3-b-plus.dtb -M raspi3 -kernel kernel8.img -display none -serial null -serial stdio
 
 run:
-	qemu-system-aarch64 -initrd initramfs.cpio -M raspi3 -kernel bootloader.img -display none -serial null -serial stdio
+	qemu-system-aarch64 -initrd initramfs.cpio -dtb bcm2710-rpi-3-b-plus.dtb -M raspi3 -kernel bootloader.img -display none -serial null -serial stdio
 
 debug:
-	qemu-system-aarch64 -initrd initramfs.cpio -M raspi3 -kernel bootloader.img -display none -serial null -serial stdio -S -s
+	qemu-system-aarch64 -initrd initramfs.cpio -dtb bcm2710-rpi-3-b-plus.dtb -M raspi3 -kernel bootloader.img -display none -serial null -serial stdio -S -s
 
 run_pty:
-	qemu-system-aarch64 -initrd initramfs.cpio -M raspi3 -kernel bootloader.img -display none -serial null -serial pty
+	qemu-system-aarch64 -initrd initramfs.cpio -dtb bcm2710-rpi-3-b-plus.dtb -M raspi3 -kernel bootloader.img -display none -serial null -serial pty
 
 debug_pty:
-	qemu-system-aarch64 -initrd initramfs.cpio -M raspi3 -kernel bootloader.img -display none -serial null -serial pty -S -s
+	qemu-system-aarch64 -initrd initramfs.cpio -dtb bcm2710-rpi-3-b-plus.dtb -M raspi3 -kernel bootloader.img -display none -serial null -serial pty -S -s

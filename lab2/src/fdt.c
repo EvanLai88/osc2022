@@ -2,6 +2,8 @@
 #include "lib.h"
 #include "uart.h"
 
+char* DTB_PLACE;
+
 //stored as big endian
 struct fdt_header {
     uint32_t magic;

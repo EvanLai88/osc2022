@@ -7,6 +7,8 @@
 #include "fdt.h"
 #include "malloc.h"
 
+extern char* DTB_PLACE;
+
 void shell(){
     char cmd[BUFFER_SIZE];
     int reboot_scheduled = 0;
@@ -71,7 +73,7 @@ void shell(){
 
         if ( strcmp(cmd, "dtb list -a") == 0 ) {
             uart_puts("dtb\n");
-            traverse_device_tree(dtb_place,dtb_callback_show_tree);
+            traverse_device_tree(DTB_PLACE,dtb_callback_show_tree);
             continue;
         }
 
@@ -95,7 +97,7 @@ void shell(){
 }
 
 void shell_prompt(){
-    traverse_device_tree(dtb_place,dtb_callback_initramfs);
+    traverse_device_tree(DTB_PLACE,dtb_callback_initramfs);
 
     uart_puts("\n");
     uart_puts("\033[2J\033[H");
@@ -116,7 +118,7 @@ void shell_prompt(){
     uart_hex(arm_mem_size);
     uart_puts("\n");
     uart_puts("DTB base address: ");
-    uart_hex(dtb_place);
+    uart_hex(DTB_PLACE);
     uart_puts("\n");
     
     char* string = malloc(8);

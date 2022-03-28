@@ -20,10 +20,12 @@ def read_all():
 		print(tmp, end='')
 		signal.setitimer(signal.ITIMER_REAL,0,0)
 
-uart = serial.Serial("/dev/tty.usbserial-0001")
+args = sys.argv
+uart = serial.Serial(args[1])
 uart.baudrate = 115200
 
 while True:
+        uart.write(b'\n')
         print(uart.readline().replace(b'\r\n',b'').decode())
         print(uart.readline().replace(b'\r\n',b'').decode())
         print(uart.readline().replace(b'\r\n',b'').decode())
@@ -31,8 +33,7 @@ while True:
         print(uart.readline().replace(b'\r\n',b'').decode())
         print(uart.read_until(b"img size :").decode(), end='')
 
-        args = sys.argv
-        img = args[1]
+        img = args[2]
         size = str( os.path.getsize(img) )
 
         uart.write(size.encode()+b'\n')

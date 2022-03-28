@@ -2,8 +2,6 @@
 #define _LIB_CPIO_H_
 
 
-void *CPIO_BASE;
-
 /* Magic identifiers for the "cpio" file format. */
 #define CPIO_HEADER_MAGIC "070701"
 #define CPIO_FOOTER_MAGIC "TRAILER!!!"
