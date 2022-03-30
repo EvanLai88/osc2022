@@ -1,5 +1,6 @@
 #include "uart.h"
 #include "shell.h"
+#include "exceptionHandler.h"
 
 extern char *DTB_PLACE;
 
@@ -13,5 +14,6 @@ void main(char *dtb)
     // uart_puts("DTB from x18\n");
     // uart_hex(dtb);
     // uart_puts("\n");
+    enable_interrupt();
     shell();
 }

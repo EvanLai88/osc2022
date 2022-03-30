@@ -3,5 +3,6 @@
         "malloc.h": "c",
         "exe.h": "c",
         "cpio.h": "c"
-    }
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }

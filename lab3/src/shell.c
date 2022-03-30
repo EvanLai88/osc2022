@@ -8,6 +8,7 @@
 #include "malloc.h"
 #include "cpio.h"
 #include "exe.h"
+#include "timer.h"
 
 extern char* DTB_PLACE;
 
@@ -107,7 +108,6 @@ void shell(){
 
 void shell_prompt(){
     traverse_device_tree(DTB_PLACE,dtb_callback_initramfs);
-
     uart_puts("\n");
     uart_puts("\033[2J\033[H");
     unsigned int board_revision;
@@ -144,6 +144,7 @@ void shell_prompt(){
     uart_puts("\n");
     uart_puts("This is a simple shell for raspi3.\n");
     uart_puts("type help for more information\n");
+    core_timer_enable();
 }
 
 void help(){
