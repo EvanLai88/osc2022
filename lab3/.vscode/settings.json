@@ -1,9 +1,7 @@
 {
     "files.associations": {
-        "dtb.h": "c",
-        "cpio.h": "c",
-        "fdt.h": "c",
-        "uart.h": "c",
-        "malloc.h": "c"
+        "malloc.h": "c",
+        "exe.h": "c",
+        "cpio.h": "c"
     }
 }

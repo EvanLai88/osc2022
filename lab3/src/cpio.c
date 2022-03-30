@@ -3,10 +3,6 @@
 #include "lib.h"
 
 
-#ifndef NULL
-#define NULL ((void *)0)
-#endif
-
 void *CPIO_BASE;
 
 
@@ -37,7 +33,7 @@ static unsigned long parse_hex_str(char *s, unsigned int max_len)
 }
 
 
-static int cpio_strncmp(const char *a, const char *b, unsigned long n)
+int cpio_strncmp(const char *a, const char *b, unsigned long n)
 {
     unsigned long i;
     for (i = 0; i < n; i++) {
@@ -63,7 +59,7 @@ static int cpio_strncmp(const char *a, const char *b, unsigned long n)
 // }
 
 
-static unsigned int cpio_strlen(const char *str) {
+unsigned int cpio_strlen(const char *str) {
     const char *s;
     for (s = str; *s; ++s) {}
     return (s - str);
@@ -214,6 +210,37 @@ void cpio_cat(void *archive, char *filename) {
             uart_puts_len(result, size);
             uart_puts("\n");
             break;
+        }
+        header = next;
+    }
+    if (exist == 0) {
+        uart_puts("File does not exists.\n");
+    }
+}
+
+void cpio_getfile(void *archive, char *filename, char* file) {
+    const char *current_filename, *tmp;
+    struct cpio_header *header, *next;
+    void *result;
+    int error;
+    unsigned long size;
+    int exist = 0;
+
+    tmp = filename;
+    header = archive;
+    while(header != 0) {
+        error = cpio_parse_header(header, &current_filename, &size, &result, &next);
+        if (error == 1) {
+            break;
+        }
+        if (cpio_strncmp( tmp, current_filename, cpio_strlen(tmp)) == 0) {
+            exist = 1;
+            *file = result;
+            uart_hex(result);
+            uart_puts("\n");
+            uart_hex(file);
+            uart_puts("\n");
+            return;
         }
         header = next;
     }

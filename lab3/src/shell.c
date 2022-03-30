@@ -6,6 +6,8 @@
 #include "cpio.h"
 #include "fdt.h"
 #include "malloc.h"
+#include "cpio.h"
+#include "exe.h"
 
 extern char* DTB_PLACE;
 
@@ -48,6 +50,13 @@ void shell(){
 
         if ( strcmp(cmd, "clear") == 0 ) {
             uart_puts("\033[2J\033[H");
+            continue;
+        }
+
+        if ( strcmp(cmd, "exe") == 0 ) {
+            uart_puts("filename: ");
+            uart_gets(cmd);
+            exefile(cmd);
             continue;
         }
 
@@ -176,4 +185,32 @@ void ls(){
 
 void cat(char *filename){
     cpio_cat(CPIO_BASE, filename );
+}
+
+void exefile(void *filename) {
+    const char *current_filename;
+    struct cpio_header *header, *next;
+    void *result;
+    int error;
+    unsigned long size;
+    int exist = 0;
+
+    header = CPIO_BASE;
+    while(header != 0) {
+        error = cpio_parse_header(header, &current_filename, &size, &result, &next);
+        if (error == 1) {
+            break;
+        }
+        if (cpio_strncmp( filename, current_filename, cpio_strlen(filename)) == 0) {
+            exist = 1;
+            uart_hex(result);
+            uart_puts("\n");
+            exe(result);
+            return;
+        }
+        header = next;
+    }
+    if (exist == 0) {
+        uart_puts("File does not exists.\n");
+    }
 }

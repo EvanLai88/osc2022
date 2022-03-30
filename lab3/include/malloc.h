@@ -1,5 +1,5 @@
-#ifndef MALLOC_H
-#define MALLOC_H
+#ifndef _MALLOC_H
+#define _MALLOC_H
 
 void* malloc(unsigned int size);
 

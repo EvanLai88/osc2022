@@ -1,6 +1,9 @@
 #ifndef _LIB_CPIO_H_
 #define _LIB_CPIO_H_
 
+#ifndef NULL
+#define NULL ((void *)0)
+#endif
 
 /* Magic identifiers for the "cpio" file format. */
 #define CPIO_HEADER_MAGIC "070701"
@@ -83,5 +86,10 @@ void cpio_ls(void *archive);
  * @param[in] buf_len  The length of the provided buf
  */
 void cpio_cat(void *archive, char *filename);
+
+void cpio_getfile(void *archive, char *filename, char* file);
+
+int cpio_strncmp(const char *a, const char *b, unsigned long n);
+unsigned int cpio_strlen(const char *str);
 
 #endif /* _LIB_CPIO_H_ */

@@ -11,6 +11,13 @@ _start:
 1:  wfe
     b       1b
 2:  // cpu id == 0
+    
+    // el2 to el1
+    bl from_el2_to_el1
+
+set_exception_vector_table:
+    adr x1, exception_vector_table
+    msr vbar_el1, x1
 
     // set top of stack just before our code (stack grows to a lower address per AAPCS64)
     ldr     x1, =_start
@@ -26,3 +33,11 @@ _start:
 
 4:  bl      main
     b       1b
+
+from_el2_to_el1:
+    mov x1, (1 << 31) // EL1 uses aarch64
+    msr hcr_el2, x1
+    mov x1, 0x3c5 // EL1h (SPSel = 1) with interrupt disabled
+    msr spsr_el2, x1
+    msr elr_el2, lr
+    eret // return to EL1

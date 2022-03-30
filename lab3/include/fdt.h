@@ -1,5 +1,5 @@
-#ifndef DTB_H
-#define DTB_H
+#ifndef _DTB_H
+#define _DTB_H
 
 #define uint32_t unsigned int
 
