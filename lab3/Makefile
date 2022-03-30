@@ -11,7 +11,7 @@ OUT_DIR = obj
 SRCS = $(wildcard $(SRC_DIR)/*.c)
 OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OUT_DIR)/%.o)
 
-all: clean rootfs.img kernel8.img bootloader.img
+all: clean rootfs.img kernel8.img 
 
 $(OUT_DIR)/%.o: $(SRC_DIR)/%.S
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -28,9 +28,9 @@ $(OUT_DIR)/boot.o: bootloader/boot.S
 $(OUT_DIR)/bootloader.o: bootloader/bootloader.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-bootloader.img: $(OUT_DIR)/boot.o $(OUT_DIR)/bootloader.o $(OUT_DIR)/lib.o $(OUT_DIR)/uart.o
-	$(LD) -nostdlib -nostartfiles $^ -T bootloader/link.ld -o bootloader.elf
-	$(OBJCOPY) -O binary bootloader.elf bootloader.img
+# bootloader.img: $(OUT_DIR)/boot.o $(OUT_DIR)/bootloader.o $(OUT_DIR)/lib.o $(OUT_DIR)/uart.o $(OUT_DIR)/exeptionHandler.o
+# 	$(LD) -nostdlib -nostartfiles $^ -T bootloader/link.ld -o bootloader.elf
+# 	$(OBJCOPY) -O binary bootloader.elf bootloader.img
 
 kernel8.img: $(OUT_DIR)/start.o $(OUT_DIR)/exceptionVectorTable.o $(OBJS)
 	$(LD) -nostdlib -nostartfiles $^ -T link.ld -o kernel8.elf

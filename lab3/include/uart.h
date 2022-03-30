@@ -32,4 +32,23 @@ int   uart_int(int d);
 void  uart_printf();
 void uart_putln(char *s);
 
+void enable_mini_uart_interrupt();
+void disable_mini_uart_interrupt();
+void enable_mini_uart_r_interrupt();
+void enable_mini_uart_w_interrupt();
+void disable_mini_uart_r_interrupt();
+void disable_mini_uart_w_interrupt();
+int mini_uart_r_interrupt_is_enable();
+int mini_uart_w_interrupt_is_enable();
+
+
+
+
+
+void uart_interrupt_r_handler();
+void uart_interrupt_w_handler();
+void uart_async_putc(char c);
+char uart_async_getc();
+int uart_async_puts(char *s);
+char *uart_async_gets(char *buf);
 #endif

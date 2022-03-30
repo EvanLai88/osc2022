@@ -1,8 +1,16 @@
 #include "uart.h"
 #include "gpio.h"
+#include "exceptionHandler.h"
 
 int state = 0;
 int count, left_count = 0;
+
+char uart_tx_buffer[BUFFER_SIZE] = {};
+unsigned int uart_tx_buffer_widx = 0; //write index
+unsigned int uart_tx_buffer_ridx = 0; //read index
+char uart_rx_buffer[BUFFER_SIZE] = {};
+unsigned int uart_rx_buffer_widx = 0;
+unsigned int uart_rx_buffer_ridx = 0;
 
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
@@ -315,4 +323,180 @@ void uart_printf(){
 void uart_putln(char *s) {
     uart_puts(s);
     uart_puts("\n");
+}
+
+void enable_mini_uart_interrupt()
+{
+    enable_mini_uart_r_interrupt();
+    enable_mini_uart_w_interrupt();
+    *ENABLE_IRQS_1 |= 1 << 29;
+}
+
+void disable_mini_uart_interrupt()
+{
+    disable_mini_uart_r_interrupt();
+    disable_mini_uart_w_interrupt();
+}
+
+void enable_mini_uart_r_interrupt()
+{
+    *AUX_MU_IER |= 1;
+}
+
+void enable_mini_uart_w_interrupt()
+{
+    *AUX_MU_IER |= 2;
+}
+
+void disable_mini_uart_r_interrupt()
+{
+    *AUX_MU_IER &= ~(1);
+}
+
+void disable_mini_uart_w_interrupt()
+{
+    *AUX_MU_IER &= ~(2);
+}
+
+int mini_uart_r_interrupt_is_enable()
+{
+    return *AUX_MU_IER & 1;
+}
+
+int mini_uart_w_interrupt_is_enable()
+{
+    return *AUX_MU_IER & 2;
+}
+
+
+
+
+
+
+
+
+void uart_interrupt_r_handler()
+{
+    //read buffer full
+    if ((uart_rx_buffer_widx + 1) % BUFFER_SIZE == uart_rx_buffer_ridx)
+    {
+        disable_mini_uart_r_interrupt(); //disable read interrupt when read buffer full
+        return;
+    }
+    uart_rx_buffer[uart_rx_buffer_widx++] = uart_getc(ECHO);
+    if (uart_rx_buffer_widx >= BUFFER_SIZE)
+        uart_rx_buffer_widx = 0;
+
+    enable_mini_uart_r_interrupt(); // lab 3 : advanced 2 -> unmask device line
+}
+
+void uart_interrupt_w_handler() //can write
+{
+    // buffer empty
+    if (uart_tx_buffer_ridx == uart_tx_buffer_widx)
+    {
+        disable_mini_uart_w_interrupt(); // disable w_interrupt to prevent interruption without any async output
+        return;
+    }
+    uart_send(uart_tx_buffer[uart_tx_buffer_ridx++]);
+    if (uart_tx_buffer_ridx >= BUFFER_SIZE)
+        uart_tx_buffer_ridx = 0; // cycle pointer
+
+    enable_mini_uart_w_interrupt(); // lab 3 : advanced 2 -> unmask device line
+}
+
+
+
+
+
+
+
+
+
+
+void uart_async_putc(char c)
+{
+    // full buffer wait
+    while ((uart_tx_buffer_widx + 1) % BUFFER_SIZE == uart_tx_buffer_ridx)
+    {
+        // start asynchronous transfer
+        enable_mini_uart_w_interrupt();
+    }
+
+    
+    // critical section
+    disable_interrupt();
+    uart_tx_buffer[uart_tx_buffer_widx++] = c;
+    if (uart_tx_buffer_widx >= BUFFER_SIZE)
+        uart_tx_buffer_widx = 0; // cycle pointer
+
+    // start asynchronous transfer
+    enable_interrupt();
+    
+    // enable interrupt to transfer
+    enable_mini_uart_w_interrupt();
+}
+
+char uart_async_getc()
+{
+    enable_mini_uart_r_interrupt();
+    // while buffer empty
+    // enable read interrupt to get some input into buffer
+    while (uart_rx_buffer_ridx == uart_rx_buffer_widx)
+        enable_mini_uart_r_interrupt();
+
+    // critical section
+    disable_interrupt();
+    char r = uart_rx_buffer[uart_rx_buffer_ridx++];
+
+    if (uart_rx_buffer_ridx >= BUFFER_SIZE)
+        uart_rx_buffer_ridx = 0;
+
+    enable_interrupt();
+
+    return r;
+}
+
+int uart_async_puts(char *s)
+{
+    int i = 0;
+
+    while (*s)
+    {
+        uart_async_putc(*s++);
+        i++;
+    }
+    uart_async_putc('\r');
+    uart_async_putc('\n');
+
+    return i + 2;
+}
+
+/**
+ * get a string (use async getc)
+ */
+char *uart_async_gets(char *buf)
+{
+    int count;
+    char c;
+    char *s;
+    for (s = buf, count = 0; (c = uart_async_getc()) != '\n' && count != BUFFER_SIZE - 1; count++)
+    {
+        *s = c;
+        if (*s == '\x7f') //delete -> backspace
+        {
+            count--;
+            if (count == -1)
+            {
+                uart_send(' '); // prevent back over command line #
+                continue;
+            }
+            s--;
+            count--;
+            continue;
+        }
+        s++;
+    }
+    *s = '\0';
+    return buf;
 }

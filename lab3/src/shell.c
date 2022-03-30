@@ -145,6 +145,12 @@ void shell_prompt(){
     uart_puts("This is a simple shell for raspi3.\n");
     uart_puts("type help for more information\n");
     core_timer_enable();
+    enable_mini_uart_interrupt();
+    char s[BUFFER_SIZE];
+    uart_async_gets(s);
+    uart_async_puts("async_puts\n");
+    uart_async_puts(s);
+    disable_mini_uart_interrupt();
 }
 
 void help(){

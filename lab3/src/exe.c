@@ -6,11 +6,11 @@ int exe(void *file) {
     
     void *user_stack = malloc(USER_STACK_SIZE);
     uart_hex(USER_STACK_SIZE);
-    uart_puts("\n");
+    uart_async_puts("\n");
     uart_hex(file);
-    uart_puts("\n");
+    uart_async_puts("\n");
     uart_hex(user_stack);
-    uart_puts("\n");
+    uart_async_puts("\n");
 
     asm(
         /* EL1h (SPSel = 1) with interrupt disabled */
