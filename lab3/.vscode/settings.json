@@ -3,7 +3,8 @@
         "malloc.h": "c",
         "exe.h": "c",
         "cpio.h": "c",
-        "exceptionhandler.h": "c"
+        "exceptionhandler.h": "c",
+        "uart.h": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

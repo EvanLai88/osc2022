@@ -18,14 +18,14 @@ void shell(){
 
     shell_prompt();
     while(1){
-        uart_puts("# ");
+        uart_async_puts("# ");
         for (int i=0; i<BUFFER_SIZE; i++) {
             cmd[i] = '\0';
         }
-        uart_gets(cmd);
-        // uart_puts("you typed:\n");
-        // uart_puts(cmd);
-        // uart_puts("\n");
+        uart_async_gets(cmd);
+        // uart_async_puts("you typed:\n");
+        // uart_async_puts(cmd);
+        // uart_async_puts("\n");
 
         if ( strcmp(cmd, "help") == 0 ) {
             help();
@@ -43,35 +43,51 @@ void shell(){
         }
         
         if ( strcmp(cmd, "cat") == 0  ) {
-            uart_puts("filename: ");
-            uart_gets(cmd);
+            uart_async_puts("filename: ");
+            uart_async_gets(cmd);
             cat(cmd);
             continue;
         }
 
         if ( strcmp(cmd, "clear") == 0 ) {
-            uart_puts("\033[2J\033[H");
+            uart_async_puts("\033[2J\033[H");
             continue;
         }
 
         if ( strcmp(cmd, "exe") == 0 ) {
-            uart_puts("filename: ");
-            uart_gets(cmd);
+            uart_async_puts("filename: ");
+            uart_async_gets(cmd);
             exefile(cmd);
+            continue;
+        }
+
+        if (strncmp(cmd, "setTimeout", sizeof("setTimeout") - 1) == 0)
+        {
+            char *message = strchr(cmd, ' ') + 1;
+            char *end_message = strchr(message, ' ');
+            *end_message = '\0';
+            char *seconds = end_message + 1;
+            add_timer(uart_putln, atoi(seconds), message);
+            continue;
+        }
+
+        if (strcmp(cmd, "clockAlert") == 0)
+        {
+            add_timer(two_second_alert, 2, "two_second_alert");
             continue;
         }
 
         if ( strcmp(cmd, "reboot") == 0 ) {
             reboot_scheduled = 1;
-            // uart_puts("You have roughly 17 seconds to cancel reboot.\nCancel reboot with\nreboot -c\n");
+            // uart_async_puts("You have roughly 17 seconds to cancel reboot.\nCancel reboot with\nreboot -c\n");
 
             int time;
-            uart_puts("time out: ");
-            uart_gets(cmd);
+            uart_async_puts("time out: ");
+            uart_async_gets(cmd);
             time = atoi(cmd);
-            uart_puts("Set time out ");
+            uart_async_puts("Set time out ");
             uart_int(time);
-            uart_puts(" sec.\n");
+            uart_async_puts(" sec.\n");
             reboot(time);
             continue;
         }
@@ -82,7 +98,7 @@ void shell(){
         }
 
         if ( strcmp(cmd, "dtb list -a") == 0 ) {
-            uart_puts("dtb\n");
+            uart_async_puts("dtb\n");
             traverse_device_tree(DTB_PLACE,dtb_callback_show_tree);
             continue;
         }
@@ -93,7 +109,7 @@ void shell(){
                 reboot_scheduled = 0;
             }
             else {
-                uart_puts("No scheduled reboot.\n");
+                uart_async_puts("No scheduled reboot.\n");
             }
             continue;
         }
@@ -102,80 +118,72 @@ void shell(){
             continue;
         }
 
-        uart_puts("command not found.\n");
+        uart_async_puts("command not found.\n");
     }
 }
 
 void shell_prompt(){
     traverse_device_tree(DTB_PLACE,dtb_callback_initramfs);
-    uart_puts("\n");
-    uart_puts("\033[2J\033[H");
+    uart_async_puts("\n");
+    uart_async_puts("\033[2J\033[H");
     unsigned int board_revision;
     get_board_revision(&board_revision);
-    uart_puts("Board revision is : 0x");
+    uart_async_puts("Board revision is : 0x");
     uart_hex(board_revision);
-    uart_puts("\n");
+    uart_async_puts("\n");
     
     unsigned int arm_mem_base_addr;
     unsigned int arm_mem_size;
 
     get_arm_memory_info(&arm_mem_base_addr,&arm_mem_size);
-    uart_puts("ARM memory base address in bytes : 0x");
+    uart_async_puts("ARM memory base address in bytes : 0x");
     uart_hex(arm_mem_base_addr);
-    uart_puts("\n");
-    uart_puts("ARM memory size in bytes : 0x");
+    uart_async_puts("\n");
+    uart_async_puts("ARM memory size in bytes : 0x");
     uart_hex(arm_mem_size);
-    uart_puts("\n");
-    uart_puts("DTB base address: ");
+    uart_async_puts("\n");
+    uart_async_puts("DTB base address: ");
     uart_hex(DTB_PLACE);
-    uart_puts("\n");
+    uart_async_puts("\n");
     
     char* string = malloc(8);
 
-    uart_puts("malloc(8) address:");
+    uart_async_puts("malloc(8) address:");
     uart_hex(string);
-    uart_puts("\n");
+    uart_async_puts("\n");
 
     string = malloc(4);
-    uart_puts("malloc(8) address:");
+    uart_async_puts("malloc(8) address:");
     uart_hex(string);
-    uart_puts("\n");
+    uart_async_puts("\n");
 
-    uart_puts("\n");
-    uart_puts("This is a simple shell for raspi3.\n");
-    uart_puts("type help for more information\n");
-    core_timer_enable();
-    enable_mini_uart_interrupt();
-    char s[BUFFER_SIZE];
-    uart_async_gets(s);
-    uart_async_puts("async_puts\n");
-    uart_async_puts(s);
-    disable_mini_uart_interrupt();
+    uart_async_puts("\n");
+    uart_async_puts("This is a simple shell for raspi3.\n");
+    uart_async_puts("type help for more information\n");
 }
 
 void help(){
-    uart_puts("help     : print this help menu.\n");
-    uart_puts("ls       : list files.\n");
-    uart_puts("cat      : print file content.\n");
-    uart_puts("hello    : print hello world!\n");
-    uart_puts("clear    : clear screen.\n");
-    uart_puts("reboot   : reboot raspberry pi.\n");
-
+    uart_async_puts("help     : print this help menu.\n");
+    uart_async_puts("ls       : list files.\n");
+    uart_async_puts("cat      : print file content.\n");
+    uart_async_puts("hello    : print hello world!\n");
+    uart_async_puts("clear    : clear screen.\n");
+    uart_async_puts("reboot   : reboot raspberry pi.\n");
 }
 
 void hello_world(){
-    uart_puts("hello world!\n");
+    uart_async_puts("hello world!\n");
 }
 
 void reboot(int time){
     // char buf[BUFFER_SIZE];
     // int time;
-    // uart_puts("time out: ");
-    // uart_gets(buf);
+    // uart_async_puts("time out: ");
+    // uart_async_gets(buf);
     // time = atoi(buf);
-    // uart_puts("Set time out ");
+    // uart_async_puts("Set time out ");
     // uart_int(time);
-    // uart_puts(" sec.\n");
+    // uart_async_puts(" sec.\n");
     // reset(time);
 
     reset(time << 16);
@@ -183,7 +191,7 @@ void reboot(int time){
 
 void cancel_reboot(){
     cancel_reset();
-    uart_puts("reboot canceled.\n");
+    uart_async_puts("reboot canceled.\n");
 }
 
 void ls(){
@@ -211,13 +219,13 @@ void exefile(void *filename) {
         if (cpio_strncmp( filename, current_filename, cpio_strlen(filename)) == 0) {
             exist = 1;
             uart_hex(result);
-            uart_puts("\n");
+            uart_async_puts("\n");
             exe(result);
             return;
         }
         header = next;
     }
     if (exist == 0) {
-        uart_puts("File does not exists.\n");
+        uart_async_puts("File does not exists.\n");
     }
 }

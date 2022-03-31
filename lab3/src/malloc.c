@@ -13,3 +13,7 @@ void* malloc(unsigned int size) {
     top += align_up(size+0x10, 0x10);
     return r;
 }
+
+void free(void* ptr) {
+
+}

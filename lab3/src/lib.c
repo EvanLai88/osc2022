@@ -17,6 +17,56 @@ int strcmp(char *s1, char *s2) {
 
 }
 
+int strncmp (const char *s1, const char *s2, unsigned long long n)
+{
+  unsigned char c1 = '\0';
+  unsigned char c2 = '\0';
+  if (n >= 4)
+    {
+      unsigned int n4 = n >> 2;
+      do
+        {
+          c1 = (unsigned char) *s1++;
+          c2 = (unsigned char) *s2++;
+          if (c1 == '\0' || c1 != c2)
+            return c1 - c2;
+          c1 = (unsigned char) *s1++;
+          c2 = (unsigned char) *s2++;
+          if (c1 == '\0' || c1 != c2)
+            return c1 - c2;
+          c1 = (unsigned char) *s1++;
+          c2 = (unsigned char) *s2++;
+          if (c1 == '\0' || c1 != c2)
+            return c1 - c2;
+          c1 = (unsigned char) *s1++;
+          c2 = (unsigned char) *s2++;
+          if (c1 == '\0' || c1 != c2)
+            return c1 - c2;
+        } while (--n4 > 0);
+      n &= 3;
+    }
+  while (n > 0)
+    {
+      c1 = (unsigned char) *s1++;
+      c2 = (unsigned char) *s2++;
+      if (c1 == '\0' || c1 != c2)
+        return c1 - c2;
+      n--;
+    }
+  return c1 - c2;
+}
+
+char* strchr (register const char *s, int c)
+{
+  do {
+    if (*s == c)
+      {
+        return (char*)s;
+      }
+  } while (*s++);
+  return (0);
+}
+
 int len(char *s) {
     int digits = 0;
     while(*s++) {
@@ -48,6 +98,19 @@ unsigned long pass_x0(unsigned long x0) {
     return x0;
 }
 
+char* strcpy (char *dest, const char *src)
+{
+  return memcpy (dest, src, len (src) + 1);
+}
+
+char* memcpy (void *dest, const void *src, unsigned long long len)
+{
+  char *d = dest;
+  const char *s = src;
+  while (len--)
+    *d++ = *s++;
+  return dest;
+}
 
 // /* Copyright (c) 1986, 1988, 1991, 1993
 //  *	The Regents of the University of California.  All rights reserved.

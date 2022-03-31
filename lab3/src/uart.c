@@ -253,6 +253,17 @@ void uart_puts_len(char *s, unsigned long len) {
     }
 }
 
+void uart_async_puts_len(char *s, unsigned long len) {
+    while(len) {
+        /* convert newline to carrige return + newline */
+        if(*s=='\n')
+            uart_async_putc('\r');
+        uart_async_putc(*s);
+        s++;
+        len--;
+    }
+}
+
 /**
  * Display a binary value in hexadecimal
  */
@@ -466,9 +477,6 @@ int uart_async_puts(char *s)
         uart_async_putc(*s++);
         i++;
     }
-    uart_async_putc('\r');
-    uart_async_putc('\n');
-
     return i + 2;
 }
 

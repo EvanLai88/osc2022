@@ -184,8 +184,8 @@ void cpio_ls(void *archive) {
     for (i = 0; i < 128; i++) {
         error = cpio_parse_header(header, &current_filename, &size, &result, &next);
         if (error) break;
-        uart_puts(current_filename);
-        uart_puts("\n");
+        uart_async_puts(current_filename);
+        uart_async_puts("\n");
         header = next;
     }
 }
@@ -207,14 +207,14 @@ void cpio_cat(void *archive, char *filename) {
         }
         if (cpio_strncmp( tmp, current_filename, cpio_strlen(tmp)) == 0) {
             exist = 1;
-            uart_puts_len(result, size);
-            uart_puts("\n");
+            uart_async_puts_len(result, size);
+            uart_async_puts("\n");
             break;
         }
         header = next;
     }
     if (exist == 0) {
-        uart_puts("File does not exists.\n");
+        uart_async_puts("File does not exists.\n");
     }
 }
 
@@ -237,14 +237,14 @@ void cpio_getfile(void *archive, char *filename, char* file) {
             exist = 1;
             *file = result;
             uart_hex(result);
-            uart_puts("\n");
+            uart_async_puts("\n");
             uart_hex(file);
-            uart_puts("\n");
+            uart_async_puts("\n");
             return;
         }
         header = next;
     }
     if (exist == 0) {
-        uart_puts("File does not exists.\n");
+        uart_async_puts("File does not exists.\n");
     }
 }
