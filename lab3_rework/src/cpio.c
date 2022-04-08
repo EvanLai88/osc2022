@@ -37,7 +37,7 @@ static unsigned long parse_hex_str(char *s, unsigned int max_len)
 }
 
 
-static int cpio_strncmp(const char *a, const char *b, unsigned long n)
+int cpio_strncmp(const char *a, const char *b, unsigned long n)
 {
     unsigned long i;
     for (i = 0; i < n; i++) {
@@ -63,7 +63,7 @@ static int cpio_strncmp(const char *a, const char *b, unsigned long n)
 // }
 
 
-static unsigned int cpio_strlen(const char *str) {
+unsigned int cpio_strlen(const char *str) {
     const char *s;
     for (s = str; *s; ++s) {}
     return (s - str);
@@ -71,7 +71,7 @@ static unsigned int cpio_strlen(const char *str) {
 
 
 int cpio_parse_header(struct cpio_header *archive,
-        const char **filename, unsigned long *_filesize, void **data,
+        char **filename, unsigned long *_filesize, void **data,
         struct cpio_header **next)
 {
     unsigned long filesize;
@@ -107,7 +107,7 @@ int cpio_parse_header(struct cpio_header *archive,
 }
 
 
-void *cpio_get_entry(void *archive, int n, const char **name, unsigned long *size)
+void *cpio_get_entry(void *archive, int n, char **name, unsigned long *size)
 {
     int i;
     struct cpio_header *header = archive;
@@ -132,7 +132,7 @@ void *cpio_get_file(void *archive, const char *name, unsigned long *size)
     while (1) {
         struct cpio_header *next;
         void *result;
-        const char *current_filename;
+        char *current_filename;
 
         int error = cpio_parse_header(header, &current_filename,
                 size, &result, &next);
@@ -146,7 +146,7 @@ void *cpio_get_file(void *archive, const char *name, unsigned long *size)
 
 int cpio_info(void *archive, struct cpio_info *info) {
     struct cpio_header *header, *next;
-    const char *current_filename;
+    char *current_filename;
     void *result;
     int error;
     unsigned long size, current_path_sz;
@@ -178,7 +178,7 @@ int cpio_info(void *archive, struct cpio_info *info) {
 
 
 void cpio_ls(void *archive) {
-    const char *current_filename;
+    char *current_filename;
     struct cpio_header *header, *next;
     void *result;
     int error;
@@ -189,13 +189,16 @@ void cpio_ls(void *archive) {
         error = cpio_parse_header(header, &current_filename, &size, &result, &next);
         if (error) break;
         uart_puts(current_filename);
+        // uart_hex((unsigned long long)result);
+        // uart_puts(" ");
+        // uart_hex(result);
         uart_puts("\n");
         header = next;
     }
 }
 
 void cpio_cat(void *archive, char *filename) {
-    const char *current_filename, *tmp;
+    char *current_filename, *tmp;
     struct cpio_header *header, *next;
     void *result;
     int error;
@@ -209,7 +212,7 @@ void cpio_cat(void *archive, char *filename) {
         if (error == 1) {
             break;
         }
-        if (cpio_strncmp( tmp, current_filename, cpio_strlen(tmp)) == 0) {
+        if (cpio_strncmp( tmp, current_filename, cpio_strlen(current_filename)) == 0) {
             exist = 1;
             uart_puts_len(result, size);
             uart_puts("\n");

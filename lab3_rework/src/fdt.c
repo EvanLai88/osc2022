@@ -71,7 +71,7 @@ void traverse_device_tree(void *dtb_ptr,dtb_callback callback)
         }else
         {
             uart_puts("error type:");
-            uart_puts(token_type);
+            uart_hex(token_type);
             uart_puts("\n");
             return;
         }
@@ -98,7 +98,7 @@ void dtb_callback_show_tree(uint32_t node_type, char *name, void *data, uint32_t
         uart_puts(name);
         uart_puts(": ");
         if (data_size == 4) {
-            uart_hex(data);
+            uart_hex((unsigned long long)data);
         }
         else {
             uart_puts(data);

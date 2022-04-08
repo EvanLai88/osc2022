@@ -34,6 +34,12 @@ struct cpio_info {
     unsigned int max_path_sz;
 };
 
+int cpio_parse_header(struct cpio_header *archive,
+        char **filename, unsigned long *_filesize, void **data,
+        struct cpio_header **next);
+
+int cpio_strncmp(const char *a, const char *b, unsigned long n);
+unsigned int cpio_strlen(const char *str);
 
 /**
  * Retrieve file information from a provided CPIO list index
@@ -46,7 +52,7 @@ struct cpio_info {
  * @return             The location of the file in memory; NULL if the index
  *                     exceeds the number of files in the CPIO archive.
  */
-void *cpio_get_entry(void *archive, int index, const char **name, unsigned long *size);
+void *cpio_get_entry(void *archive, int index, char **name, unsigned long *size);
 
 /**
  * Retrieve file information from a provided file name

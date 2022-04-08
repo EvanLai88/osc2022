@@ -4,6 +4,8 @@
         "cpio.h": "c",
         "fdt.h": "c",
         "uart.h": "c",
-        "malloc.h": "c"
+        "malloc.h": "c",
+        "gpio.h": "c",
+        "exceptionhandler.h": "c"
     }
 }

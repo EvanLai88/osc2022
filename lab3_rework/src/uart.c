@@ -262,8 +262,8 @@ void uart_puts_len(char *s, unsigned long len) {
 /**
  * Display a binary value in hexadecimal
  */
-void uart_hex(unsigned int d) {
-    unsigned int n;
+void uart_hex(unsigned long long d) {
+    unsigned long long n;
     int c;
     for(c=28;c>=0;c-=4) {
         // get highest tetrad
