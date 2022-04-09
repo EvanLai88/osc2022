@@ -145,6 +145,7 @@ void shell_prompt(){
     uart_puts("\n");
     uart_puts("This is a simple shell for raspi3.\n");
     uart_puts("type help for more information\n");
+    set_timeout_after(0);
     core_timer_interrupt_enable();
 }
 
