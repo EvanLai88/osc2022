@@ -6,6 +6,9 @@
         "uart.h": "c",
         "malloc.h": "c",
         "gpio.h": "c",
-        "exceptionhandler.h": "c"
+        "exceptionhandler.h": "c",
+        "timer.h": "c",
+        "exception.h": "c",
+        "time.h": "c"
     }
 }

@@ -245,6 +245,16 @@ void uart_puts(char *s) {
     }
 }
 
+void uart_puts_const(const char *s) {
+    while(*s) {
+        /* convert newline to carrige return + newline */
+        if(*s=='\n')
+            uart_send('\r');
+        uart_send(*s);
+        s++;
+    }
+}
+
 /**
  * Display a string with length
  */

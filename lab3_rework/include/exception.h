@@ -29,4 +29,6 @@ void invalid_exception_router();
 void enable_interrupt();
 void disable_interrupt();
 
+void debug_exception(unsigned long long x0, const char *caller);
+
 #endif
