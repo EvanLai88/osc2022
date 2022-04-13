@@ -33,8 +33,52 @@ void sync_64_router(unsigned long long x0){
 void irq_router(unsigned long long x0) {
     debug_exception(x0, __func__);
     IRQ_COUNT++;
-    upTime();
-    set_timeout_after(2);
+    unsigned long long tmp = *IRQ_PEND1 & (1<<29);
+    if (tmp)
+    {
+        // disable_mini_uart_interrupt();
+        // uart_puts("\tIRQ_PEND1: ");
+        // uart_hex(tmp);
+        // uart_puts("\n");
+        // enable_mini_uart_interrupt();
+
+        if (*CORE0_INTERRUPT_SOURCE & (1<<8)) // from aux && from GPU0 -> uart exception  
+        {
+            /*
+            AUX_MU_IIR
+            on read bits[2:1] :
+                00 : No interrupts
+                01 : Transmit holding register empty
+                10 : Receiver holds valid byte
+                11: <Not possible> 
+            on write bits[2:1] :
+                01 : Clear receive FIFO
+                10 : Clear transmit FIFO
+            */
+            if (*AUX_MU_IIR & (1<<1))
+            {
+                // disable_mini_uart_w_interrupt();
+                // uart_puts("uart w handler\n");
+                uart_interrupt_w_handler();
+            }
+            else if (*AUX_MU_IIR & (1<<2))
+            {
+                // disable_mini_uart_r_interrupt();
+                // uart_puts("uart r handler\n");
+                uart_interrupt_r_handler();
+            }
+            else
+            {
+                disable_mini_uart_interrupt();
+                // uart_puts("uart handler error\n");
+                enable_mini_uart_interrupt();
+            }
+        }
+
+    }else if(*CORE0_INTERRUPT_SOURCE & (1<<1))
+    {
+        core_timer_handler();
+    }
 }
 
 void invalid_exception_router(unsigned long long x0) {
@@ -55,8 +99,11 @@ void disable_interrupt(){
 
 void debug_exception(unsigned long long x0, const char *caller)
 {
+    // disable_mini_uart_interrupt();
+    // uart_puts("\t");
     // uart_hex(x0);
     // uart_puts(": ");
     // uart_puts_const(caller);
     // uart_puts(" exception\n");
+    // enable_mini_uart_interrupt();
 }

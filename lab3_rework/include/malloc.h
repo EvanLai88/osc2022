@@ -2,5 +2,6 @@
 #define MALLOC_H
 
 void* malloc(unsigned int size);
+void free(void* ptr);
 
 #endif

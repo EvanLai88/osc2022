@@ -29,7 +29,7 @@ void traverse_device_tree(void *dtb_ptr,dtb_callback callback)
     struct fdt_header* header = dtb_ptr;
     if(uint32_endian_big2lttle(header->magic) != 0xD00DFEED)
     {
-        uart_puts("traverse_device_tree : wrong magic in traverse_device_tree");
+        uart_async_puts("traverse_device_tree : wrong magic in traverse_device_tree");
         return;
     }
 
@@ -70,9 +70,9 @@ void traverse_device_tree(void *dtb_ptr,dtb_callback callback)
             callback(token_type,0,0,0);
         }else
         {
-            uart_puts("error type:");
-            uart_hex(token_type);
-            uart_puts("\n");
+            uart_async_puts("error type:");
+            uart_async_hex(token_type);
+            uart_async_puts("\n");
             return;
         }
     }
@@ -83,27 +83,27 @@ void dtb_callback_show_tree(uint32_t node_type, char *name, void *data, uint32_t
     static int level = 0;
     if(node_type==FDT_BEGIN_NODE)
     {
-        for(int i=0;i<level;i++)uart_puts("   ");
-        uart_puts(name);
-        uart_puts(": {\n");
+        for(int i=0;i<level;i++)uart_async_puts("   ");
+        uart_async_puts(name);
+        uart_async_puts(": {\n");
         level++;
     }else if(node_type==FDT_END_NODE)
     {
         level--;
-        for(int i=0;i<level;i++)uart_puts("   ");
-        uart_puts("}\n");
+        for(int i=0;i<level;i++)uart_async_puts("   ");
+        uart_async_puts("}\n");
     }else if(node_type==FDT_PROP)
     {
-        for(int i=0;i<level;i++)uart_puts("   ");
-        uart_puts(name);
-        uart_puts(": ");
+        for(int i=0;i<level;i++)uart_async_puts("   ");
+        uart_async_puts(name);
+        uart_async_puts(": ");
         if (data_size == 4) {
-            uart_hex((unsigned long long)data);
+            uart_async_hex((unsigned long long)data);
         }
         else {
-            uart_puts(data);
+            uart_async_puts(data);
         }
-        uart_puts("\n");
+        uart_async_puts("\n");
     }
 }
 
