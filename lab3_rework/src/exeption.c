@@ -1,6 +1,7 @@
 #include "exception.h"
 #include "uart.h"
 #include "timer.h"
+#include "task.h"
 
 int SYNC_64_COUNT = 0;
 int IRQ_COUNT     = 0;
@@ -31,7 +32,6 @@ void sync_64_router(unsigned long long x0){
 }
 
 void irq_router(unsigned long long x0) {
-    disable_interrupt();
     debug_exception(x0, __func__);
     IRQ_COUNT++;
     unsigned long long tmp = *IRQ_PEND1 & (1<<29);
@@ -58,29 +58,31 @@ void irq_router(unsigned long long x0) {
             */
             if (*AUX_MU_IIR & (1<<1))
             {
-                // disable_mini_uart_w_interrupt();
-                // uart_puts("uart w handler\n");
-                uart_interrupt_w_handler();
+                disable_mini_uart_w_interrupt();
+                add_task(uart_interrupt_w_handler, UART_IRQ_PRIORITY);
+                run_preemptive_tasks();
             }
             else if (*AUX_MU_IIR & (1<<2))
             {
-                // disable_mini_uart_r_interrupt();
-                // uart_puts("uart r handler\n");
-                uart_interrupt_r_handler();
+                disable_mini_uart_r_interrupt();
+                add_task(uart_interrupt_r_handler, UART_IRQ_PRIORITY);
+                run_preemptive_tasks();
             }
             else
             {
                 disable_mini_uart_interrupt();
-                // uart_puts("uart handler error\n");
+                uart_puts("uart handler error\n");
                 enable_mini_uart_interrupt();
             }
         }
 
     }else if(*CORE0_INTERRUPT_SOURCE & (1<<1))
     {
-        core_timer_handler();
+        core_timer_disable();
+        add_task(core_timer_handler, TIMER_IRQ_PRIORITY);
+        run_preemptive_tasks();
+        core_timer_enable();
     }
-    enable_interrupt();
 }
 
 void invalid_exception_router(unsigned long long x0) {
