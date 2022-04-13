@@ -31,6 +31,7 @@ void sync_64_router(unsigned long long x0){
 }
 
 void irq_router(unsigned long long x0) {
+    disable_interrupt();
     debug_exception(x0, __func__);
     IRQ_COUNT++;
     unsigned long long tmp = *IRQ_PEND1 & (1<<29);
@@ -79,6 +80,7 @@ void irq_router(unsigned long long x0) {
     {
         core_timer_handler();
     }
+    enable_interrupt();
 }
 
 void invalid_exception_router(unsigned long long x0) {
