@@ -36,13 +36,14 @@ void set_timeout_after(int seconds);
 void set_timeout_at(unsigned long long tick);
 // #define set_timeout_at(tick)        asm volatile( "msr cntp_cval_el0, %0;": "=r"(tick) )
 
-void upTime();
+void upTime(int newLine);
 unsigned long long get_current_tick();
 unsigned long long get_timer_frq();
 
 void timer_event_callback(timer_event_t *timer_event);
 void core_timer_handler();
 void two_seconds(char *arg);
+void setTimeout(char *arg);
 void add_timer(void *callback, unsigned long long timeout, char *args);
 
 #endif

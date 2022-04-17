@@ -20,6 +20,7 @@ void sync_64_router(unsigned long long x0){
     unsigned long long esr_el1;
 	asm volatile("mrs %0, ESR_EL1\n\t" : "=r" (esr_el1) :  : "memory");
 
+    disable_mini_uart_interrupt();
     uart_puts("SPSR_EL1: ");
     uart_hex(spsr_el1);
     uart_puts("\n");
@@ -29,6 +30,7 @@ void sync_64_router(unsigned long long x0){
     uart_puts("ESR_EL1: ");
     uart_hex(esr_el1);
     uart_puts("\n");
+    enable_mini_uart_interrupt();
 }
 
 void irq_router(unsigned long long x0) {
@@ -38,6 +40,7 @@ void irq_router(unsigned long long x0) {
     if (tmp)
     {
         // disable_mini_uart_interrupt();
+        // uart_putln("IO exception");
         // uart_puts("\tIRQ_PEND1: ");
         // uart_hex(tmp);
         // uart_puts("\n");
@@ -78,6 +81,9 @@ void irq_router(unsigned long long x0) {
 
     }else if(*CORE0_INTERRUPT_SOURCE & (1<<1))
     {
+        // disable_mini_uart_interrupt();
+        // uart_putln("timer exception");
+        // enable_mini_uart_interrupt();
         core_timer_disable();
         add_task(core_timer_handler, TIMER_IRQ_PRIORITY);
         run_preemptive_tasks();
@@ -89,7 +95,9 @@ void invalid_exception_router(unsigned long long x0) {
     debug_exception(x0, __func__);
     INVALID_COUNT++;
 
+    disable_mini_uart_interrupt();
     uart_puts("\nException handler not implemented\n");
+    enable_mini_uart_interrupt();
     sync_64_router(x0);
 }
 

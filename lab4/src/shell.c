@@ -63,8 +63,8 @@ void shell(){
             char *end_message = strchr(message, ' ');
             *end_message = '\0';
             char *seconds = end_message + 1;
-            upTime();
-            add_timer(uart_putln, atoi(seconds), message);
+            upTime(NO_NEW_LINE);
+            add_timer(setTimeout, atoi(seconds), message);
             continue;
         }
 
@@ -104,6 +104,24 @@ void shell(){
             break;
         }
 
+        if ( strcmp(cmd, "test timer") == 0 ) {
+            uart_async_puts("\r");
+            upTime(NO_NEW_LINE);
+            uart_async_puts("setTimeout aaa 30\n");
+            add_timer(setTimeout, 30, "aaa");
+            uart_async_puts("setTimeout bbb 20\n");
+            add_timer(setTimeout, 20, "bbb");
+            uart_async_puts("setTimeout ccc 25\n");
+            add_timer(setTimeout, 25, "ccc");
+            uart_async_puts("setTimeout ddd 15\n");
+            add_timer(setTimeout, 15, "ddd");
+            uart_async_puts("setTimeout eee 10\n");
+            add_timer(setTimeout, 10, "eee");
+            uart_async_puts("setTimeout fff 5\n");
+            add_timer(setTimeout, 5,  "fff");
+            continue;
+        }
+
         if ( strcmp(cmd, "dtb list -a") == 0 ) {
             uart_async_puts("dtb\n");
             traverse_device_tree(DTB_PLACE,dtb_callback_show_tree);
@@ -132,53 +150,60 @@ void shell(){
 void shell_prompt(){
     traverse_device_tree(DTB_PLACE,dtb_callback_initramfs);
 
-    uart_puts("\n");
-    uart_puts("\033[2J\033[H");
+    uart_async_puts("\n");
+    uart_async_puts("\033[2J\033[H");
     unsigned int board_revision;
     get_board_revision(&board_revision);
-    uart_puts("Board revision is : 0x");
-    uart_hex(board_revision);
-    uart_puts("\n");
+    uart_async_puts("Board revision is : 0x");
+    uart_async_hex(board_revision);
+    uart_async_puts("\n");
     
     unsigned int arm_mem_base_addr;
     unsigned int arm_mem_size;
 
     get_arm_memory_info(&arm_mem_base_addr,&arm_mem_size);
-    uart_puts("ARM memory base address in bytes : 0x");
-    uart_hex(arm_mem_base_addr);
-    uart_puts("\n");
-    uart_puts("ARM memory size in bytes : 0x");
-    uart_hex(arm_mem_size);
-    uart_puts("\n");
-    uart_puts("DTB base address: 0x");
-    uart_hex((unsigned long long)DTB_PLACE);
-    uart_puts("\n");
+    uart_async_puts("ARM memory base address in bytes : 0x");
+    uart_async_hex(arm_mem_base_addr);
+    uart_async_puts("\n");
+    uart_async_puts("ARM memory size in bytes : 0x");
+    uart_async_hex(arm_mem_size);
+    uart_async_puts("\n");
+    uart_async_puts("DTB base address: 0x");
+    uart_async_hex((unsigned long long)DTB_PLACE);
+    uart_async_puts("\n");
     
     char* string = malloc(8);
 
-    uart_puts("malloc(8) address: 0x");
-    uart_hex((unsigned long long)string);
-    uart_puts("\n");
+    uart_async_puts("malloc(8) address: 0x");
+    uart_async_hex((unsigned long long)string);
+    uart_async_puts("\n");
 
     string = malloc(4);
-    uart_puts("malloc(8) address: 0x");
-    uart_hex((unsigned long long)string);
-    uart_puts("\n");
+    uart_async_puts("malloc(8) address: 0x");
+    uart_async_hex((unsigned long long)string);
+    uart_async_puts("\n");
 
-    uart_puts("\n");
-    uart_puts("This is a simple shell for raspi3.\n");
-    uart_puts("type help for more information\n");
+    uart_async_puts("\n");
+    uart_async_puts("This is a simple shell for raspi3.\n");
+    uart_async_puts("type help for more information\n");
     core_timer_interrupt_enable();
-    upTime();
+    upTime(NO_NEW_LINE);
 }
 
 void help(){
-    uart_async_puts("help     : print this help menu.\n");
-    uart_async_puts("ls       : list files.\n");
-    uart_async_puts("cat      : print file content.\n");
-    uart_async_puts("hello    : print hello world!\n");
-    uart_async_puts("clear    : clear screen.\n");
-    uart_async_puts("reboot   : reboot raspberry pi.\n");
+    uart_async_puts("help                       : print this help menu.\n");
+    uart_async_puts("ls                         : list files.\n");
+    uart_async_puts("cat                        : print file content.\n");
+    uart_async_puts("hello                      : print hello world!\n");
+    uart_async_puts("clear                      : clear screen.\n");
+    uart_async_puts("dtb list -a                : list device tree.\n");
+    uart_async_puts("two_second                 : start two second interrupt.\n");
+    uart_async_puts("two_second -c              : cancel two second interrupt.\n");
+    uart_async_puts("setTimeout <sec> <msg>     : test timer multiplex.\n");
+    uart_async_puts("test timer                 : test timer multiplex.\n");
+    uart_async_puts("reboot                     : reboot raspberry pi.\n");
+    uart_async_puts("reboot now                 : reboot raspberry pi immediately.\n");
+    uart_async_puts("reboot -c                  : cancel reboot.\n");
 
 }
 
@@ -187,16 +212,6 @@ void hello_world(){
 }
 
 void reboot(int time){
-    // char buf[BUFFER_SIZE];
-    // int time;
-    // uart_puts("time out: ");
-    // uart_gets(buf);
-    // time = atoi(buf);
-    // uart_puts("Set time out ");
-    // uart_int(time);
-    // uart_puts(" sec.\n");
-    // reset(time);
-
     reset(time << 16);
 }
 
@@ -241,4 +256,42 @@ void exefile(void *filename) {
     if (exist == 0) {
         uart_async_puts("File does not exists.\n");
     }
+}
+
+void test_malloc()
+{
+    uart_async_puts("allocate 0x0f00\n");
+    void *a = alloc_pages(0x0f00);
+    uart_async_hex(a);
+    uart_async_puts("\n");
+    // check_all_free_list();
+    free_pages(a);
+    // check_all_free_list();
+
+    uart_async_getc(ECHO_OFF);
+    uart_async_puts("\nallocate 0x1000\n");
+    void *b = alloc_pages(0x1000);
+    uart_async_hex(b);
+    uart_async_puts("\n");
+    // check_all_free_list();
+    // free_pages(b);
+    // check_all_free_list();
+    
+    uart_async_getc(ECHO_OFF);
+    uart_async_puts("\nallocate 0x1100\n");
+    void *c = alloc_pages(0x1100);
+    uart_async_hex(c);
+    uart_async_puts("\n");
+    // check_all_free_list();
+    // free_pages(c);
+    // check_all_free_list();
+    
+    uart_async_getc(ECHO_OFF);
+    uart_async_puts("\nallocate 0x4000\n");
+    void *d = alloc_pages(0x4000);
+    uart_async_hex(d);
+    uart_async_puts("\n");
+    // check_all_free_list();
+    // free_pages(d);
+    // check_all_free_list();
 }

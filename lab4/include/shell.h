@@ -10,5 +10,6 @@ void cancel_reboot();
 void ls();
 void cat(char *filename);
 void exefile(void *filename);
+void test_malloc();
 
 #endif

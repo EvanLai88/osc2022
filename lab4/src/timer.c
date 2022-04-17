@@ -58,7 +58,7 @@ void set_timeout_after(int seconds)
         "mrs x1, cntfrq_el0;"
         "mul x1, x1, %0;"
         "msr cntp_tval_el0, x1;"
-        : "=r"(seconds)
+        :: "r"(seconds)
     );
 }
 
@@ -70,15 +70,20 @@ void set_timeout_at(unsigned long long tick)
     );
 }
 
-void upTime()
+void upTime(int newLine)
 {
     unsigned long long current_tick, cnt_frq;
     current_tick = get_current_tick();
     cnt_frq = get_timer_frq();
     
-    uart_puts("\nUp time: ");
+    disable_mini_uart_interrupt();
+    if (newLine == NEW_LINE) {
+        uart_puts("\n");
+    }
+    uart_puts("Up time: ");
     uart_int(current_tick/cnt_frq);
     uart_puts(" seconds\n");
+    enable_mini_uart_interrupt();
 }
 
 unsigned long long get_current_tick()
@@ -102,7 +107,6 @@ unsigned long long get_tick_after(int seconds)
 
 void timer_event_callback(timer_event_t *timer_event)
 {
-    upTime();
     ((void (*)(char *))timer_event->callback)(timer_event->args);
     list_del_entry((struct list_head *)timer_event);
     free(timer_event->args);
@@ -112,30 +116,43 @@ void timer_event_callback(timer_event_t *timer_event)
         set_timeout_at(((timer_event_t *)timer_event_list->next)->interrupt_time);
     }
     else {
-        set_timeout_after(10000);
+        // disable_mini_uart_interrupt();
+        // uart_putln("1 timer event list empty!!!");
+        // enable_mini_uart_interrupt();
+        set_timeout_after(30);
     }
 }
 
 void core_timer_handler()
 {
-    if (list_empty(timer_event_list))
-    {
-        set_timeout_after(10000);
-        return;
+    if (!list_empty(timer_event_list)) {
+        timer_event_callback((timer_event_t *)timer_event_list->next);
     }
-
-    timer_event_callback((timer_event_t *)timer_event_list->next);
+    else {
+        // disable_mini_uart_interrupt();
+        // uart_putln("2 timer event list empty!!!");
+        // enable_mini_uart_interrupt();
+        set_timeout_after(30);
+    }
 }
 
 void two_seconds(char *arg)
 {
     if (two_second_recurrent == 1) {
+        upTime(NEW_LINE);
         uart_putln(arg);
         add_timer(two_seconds, 2, arg);
     }
     else {
-        set_timeout_after(10000);
+        set_timeout_after(2);
     }
+}
+
+void setTimeout(char *arg)
+{
+    upTime(NEW_LINE);
+    uart_async_puts(arg);
+    uart_async_puts("\n");
 }
 
 void add_timer(void *callback, unsigned long long timeout, char *args)

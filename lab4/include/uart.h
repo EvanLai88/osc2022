@@ -8,6 +8,9 @@
 #define ECHO_OFF        0x000
 #define ECHO            0x001
 
+#define NO_NEW_LINE     0x000
+#define NEW_LINE        0x001
+
 /* Auxilary mini UART registers */
 #define AUX_ENABLE      ((volatile unsigned int*)(MMIO_BASE+0x00215004))
 #define AUX_MU_IO       ((volatile unsigned int*)(MMIO_BASE+0x00215040))

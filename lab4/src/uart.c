@@ -125,22 +125,20 @@ char uart_async_getc()
 
 void uart_interrupt_r_handler()
 {
-    //read buffer full
     if ((Rx_buf_w_idx + 1) % BUFFER_SIZE == Rx_buf_r_idx)
     {
-        disable_mini_uart_r_interrupt(); //disable read interrupt when read buffer full
+        disable_mini_uart_r_interrupt();
         return;
     }
     Rx_buf[Rx_buf_w_idx++] = uart_getc(ECHO);
     if (Rx_buf_w_idx >= BUFFER_SIZE)
         Rx_buf_w_idx = 0;
 
-    enable_mini_uart_r_interrupt(); // lab 3 : advanced 2 -> unmask device line
+    enable_mini_uart_r_interrupt();
 }
 
-void uart_interrupt_w_handler() //can write
+void uart_interrupt_w_handler()
 {
-    // buffer empty
     if (Tx_buf_r_idx == Tx_buf_w_idx)
     {
         disable_mini_uart_w_interrupt(); // disable w_interrupt to prevent interruption without any async output
@@ -148,9 +146,9 @@ void uart_interrupt_w_handler() //can write
     }
     uart_send(Tx_buf[Tx_buf_r_idx++]);
     if (Tx_buf_r_idx >= BUFFER_SIZE)
-        Tx_buf_r_idx = 0; // cycle pointer
+        Tx_buf_r_idx = 0;
 
-    enable_mini_uart_w_interrupt(); // lab 3 : advanced 2 -> unmask device line
+    enable_mini_uart_w_interrupt();
 }
 
 void echo(char r) {
@@ -325,12 +323,13 @@ void uart_puts_len(char *s, unsigned long len) {
 void uart_hex(unsigned long long d) {
     unsigned long long n;
     int c;
-    for(c=60;c>=0;c-=4) {
+    for(c=28;c>=0;c-=4) {
         // get highest tetrad
         n=(d>>c)&0xF;
         // 0-9 => '0'-'9', 10-15 => 'A'-'F'
         n+=n>9?0x37:0x30;
         uart_send(n);
+        // uart_send(' ');
     }
 }
 
@@ -395,7 +394,7 @@ char* uart_async_gets(char *buf) {
             if(c=='\x7f') {
                 count--;                    // does not count as a char
                 if(count==-1) {
-                    uart_async_getc(' ');         // recover " " from "# "
+                    uart_async_putc(' ');         // recover " " from "# "
                     continue;
                 }
                 s--;                        // move curser left one char
@@ -442,9 +441,9 @@ char* uart_async_gets(char *buf) {
                 if (left_count > 0) {       // check border
                     s++;
                     left_count--;
-                    uart_async_getc('\x1b');
-                    uart_async_getc('[');
-                    uart_async_getc('C');
+                    uart_async_putc('\x1b');
+                    uart_async_putc('[');
+                    uart_async_putc('C');
                 }
                 continue;
             }
@@ -455,9 +454,9 @@ char* uart_async_gets(char *buf) {
                 if (left_count <= count) {   // check border
                     s--;
                     left_count++;
-                    uart_async_getc('\x1b');
-                    uart_async_getc('[');
-                    uart_async_getc('D');
+                    uart_async_putc('\x1b');
+                    uart_async_putc('[');
+                    uart_async_putc('D');
                 }
                 continue;
             }
@@ -540,7 +539,7 @@ int uart_async_int(int d) {
     }
 
     if ( digits > BUFFER_SIZE - 1) {
-        uart_puts("Exceed buffer size.\n");
+        uart_async_puts("Exceed buffer size.\n");
         return -1;
     }
     
@@ -553,7 +552,7 @@ int uart_async_int(int d) {
     if (d<0) {
         uart_async_putc('-');
     }
-    uart_puts(buf);
+    uart_async_puts(buf);
     return 0;
 }
 

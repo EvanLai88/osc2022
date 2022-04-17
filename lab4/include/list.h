@@ -106,4 +106,16 @@ static inline int list_empty(const struct list_head *head)
 #define list_for_each(pos, head) \
 	for (pos = (head)->next; !list_is_head(pos, (head)); pos = pos->next)
 
+
+static inline int list_size(const struct list_head *head)
+{
+	list_head_t *pos;
+	int i= 0;
+	list_for_each(pos, head)
+	{
+		i++;
+	}
+	return i;
+}
+
 #endif

@@ -12,6 +12,7 @@
         "time.h": "c",
         "cstdarg": "c",
         "cstdio": "c",
-        "lib.h": "c"
+        "lib.h": "c",
+        "shell.h": "c"
     }
 }
