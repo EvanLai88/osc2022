@@ -1,6 +1,8 @@
 #ifndef _SHELL_H
 #define _SHELL_H
 
+#include "compiler.h"
+
 void shell();
 void shell_prompt();
 void help();
@@ -10,6 +12,9 @@ void cancel_reboot();
 void ls();
 void cat(char *filename);
 void exefile(void *filename);
-void test_malloc();
+void test_page();
+void test_chunk();
+void test_kmalloc();
+void test_reserve();
 
 #endif

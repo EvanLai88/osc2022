@@ -3,6 +3,8 @@
 #include "malloc.h"
 #include "uart.h"
 
+extern int DEBUG;
+
 int curr_task_priority = 9999;   // init a very low priority
 
 list_head_t *task_list;
@@ -14,8 +16,14 @@ void task_list_init()
 }
 
 void add_task(void *task_function,unsigned long long priority){
-    task_t *the_task = malloc(sizeof(task_t));
-
+    int tmp = DEBUG;
+    DEBUG = 0;
+    task_t *the_task = kmalloc(sizeof(task_t));
+    DEBUG = tmp;
+    // disable_interrupt();
+    // uart_hex(the_task);
+    // uart_puts("\n");
+    // enable_interrupt();
     the_task->priority = priority;
     the_task->task_function = task_function;
     INIT_LIST_HEAD(&the_task->listhead);
@@ -63,7 +71,11 @@ void run_preemptive_tasks(){
         disable_interrupt();
         curr_task_priority = prev_task_priority;
         enable_interrupt();
-        free(the_task);
+        
+        int tmp = DEBUG;
+        DEBUG = 0;
+        kfree(the_task);
+        DEBUG = tmp;
     }
 }
 

@@ -1,6 +1,7 @@
 #ifndef _EXCEPTION_H
 #define _EXCEPTION_H
 
+#include "compiler.h"
 #include "gpio.h"
 
 #define CORE0_INTERRUPT_SOURCE ((volatile unsigned int*)(0x40000060))

@@ -1,8 +1,7 @@
 #ifndef _TIMER_H
 #define _TIMER_H
 
-#define STR(x) #x
-#define XSTR(s) STR(s)
+#include "compiler.h"
 
 #define CORE0_TIMER_CTRL    0x40000040
 #define CORE1_TIMER_CTRL    0x40000044
@@ -37,6 +36,7 @@ void set_timeout_at(unsigned long long tick);
 // #define set_timeout_at(tick)        asm volatile( "msr cntp_cval_el0, %0;": "=r"(tick) )
 
 void upTime(int newLine);
+void upTime_async(int newLine);
 unsigned long long get_current_tick();
 unsigned long long get_timer_frq();
 

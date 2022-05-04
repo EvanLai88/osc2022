@@ -1,6 +1,8 @@
 #ifndef _LIST_H
 #define _LIST_H
 
+#include "compiler.h"
+
 typedef struct list_head {
 	struct list_head *next, *prev;
 }list_head_t;

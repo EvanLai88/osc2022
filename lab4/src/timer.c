@@ -3,6 +3,8 @@
 #include "malloc.h"
 #include "lib.h"
 
+extern int DEBUG;
+
 list_head_t *timer_event_list;
 int two_second_recurrent = 0;
 
@@ -86,6 +88,20 @@ void upTime(int newLine)
     enable_mini_uart_interrupt();
 }
 
+void upTime_async(int newLine)
+{
+    unsigned long long current_tick, cnt_frq;
+    current_tick = get_current_tick();
+    cnt_frq = get_timer_frq();
+    
+    if (newLine == NEW_LINE) {
+        uart_async_puts("\n");
+    }
+    uart_async_puts("Up time: ");
+    uart_async_int(current_tick/cnt_frq);
+    uart_async_puts(" seconds\n");
+}
+
 unsigned long long get_current_tick()
 {
     unsigned long long current_tick;
@@ -109,8 +125,11 @@ void timer_event_callback(timer_event_t *timer_event)
 {
     ((void (*)(char *))timer_event->callback)(timer_event->args);
     list_del_entry((struct list_head *)timer_event);
-    free(timer_event->args);
-    free(timer_event);
+    int tmp = DEBUG;
+    DEBUG = 0;
+    kfree(timer_event->args);
+    kfree(timer_event);
+    DEBUG = tmp;
 
     if (!list_empty(timer_event_list)) {
         set_timeout_at(((timer_event_t *)timer_event_list->next)->interrupt_time);
@@ -140,7 +159,9 @@ void two_seconds(char *arg)
 {
     if (two_second_recurrent == 1) {
         upTime(NEW_LINE);
+        disable_mini_uart_interrupt();
         uart_putln(arg);
+        enable_mini_uart_interrupt();
         add_timer(two_seconds, 2, arg);
     }
     else {
@@ -151,17 +172,22 @@ void two_seconds(char *arg)
 void setTimeout(char *arg)
 {
     upTime(NEW_LINE);
-    uart_async_puts(arg);
-    uart_async_puts("\n");
+    disable_mini_uart_interrupt();
+    uart_puts(arg);
+    uart_puts("\n");
+    enable_mini_uart_interrupt();
 }
 
 void add_timer(void *callback, unsigned long long timeout, char *args)
 {
-
-    timer_event_t *the_timer_event = malloc(sizeof(timer_event_t));
+    int tmp = DEBUG;
+    DEBUG = 0;
+    timer_event_t *the_timer_event = kmalloc(sizeof(timer_event_t));
 
     // store argument string into timer_event
-    the_timer_event->args = malloc(len(args) + 1);
+    the_timer_event->args = kmalloc(len(args) + 1);
+    DEBUG = tmp;
+
     strcpy(the_timer_event->args, args);
 
     the_timer_event->interrupt_time = get_tick_after(timeout);

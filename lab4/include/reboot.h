@@ -1,6 +1,7 @@
 #ifndef _REBOOT_H
 #define _REBOOT_H
 
+#include "compiler.h"
 
 #define PM_WDOG_MAGIC   0x5a000000
 #define PM_PASSWORD     0x5a000000

@@ -1,7 +1,8 @@
-#include "gpio.h"
-
 #ifndef _MBOX_H
 #define _MBOX_H
+
+#include "compiler.h"
+#include "gpio.h"
 
 #define VIDEOCORE_MBOX  (MMIO_BASE+0x0000B880)
 #define MBOX_READ       ((volatile unsigned int*)(VIDEOCORE_MBOX+0x0))

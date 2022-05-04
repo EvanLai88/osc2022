@@ -1,6 +1,7 @@
 #ifndef _UART_H
 #define _UART_H
 
+#include "compiler.h"
 #include "gpio.h"
 
 #define BUFFER_SIZE     0x100

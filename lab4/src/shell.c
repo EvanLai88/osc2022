@@ -12,6 +12,9 @@
 
 extern char* DTB_PLACE;
 extern int two_second_recurrent;
+extern uint32_t arm_memory_base;
+extern uint32_t arm_memory_size;
+extern int DEBUG;
 
 void shell(){
     char cmd[BUFFER_SIZE];
@@ -104,6 +107,26 @@ void shell(){
             break;
         }
 
+        if ( strcmp(cmd, "test page") == 0 ) {
+            test_page();
+            continue;
+        }
+
+        if ( strcmp(cmd, "test chunk") == 0 ) {
+            test_chunk();
+            continue;
+        }
+
+        if ( strcmp(cmd, "test kmalloc") == 0 ) {
+            test_kmalloc();
+            continue;
+        }
+
+        if ( strcmp(cmd, "test reserve") == 0 ) {
+            test_reserve();
+            continue;
+        }
+
         if ( strcmp(cmd, "test timer") == 0 ) {
             uart_async_puts("\r");
             upTime(NO_NEW_LINE);
@@ -148,46 +171,41 @@ void shell(){
 }
 
 void shell_prompt(){
-    traverse_device_tree(DTB_PLACE,dtb_callback_initramfs);
-
-    uart_async_puts("\n");
-    uart_async_puts("\033[2J\033[H");
+    uart_getc(ECHO_OFF);
+    uart_puts("\n");
+    uart_puts("\033[2J\033[H");
     unsigned int board_revision;
     get_board_revision(&board_revision);
-    uart_async_puts("Board revision is : 0x");
-    uart_async_hex(board_revision);
-    uart_async_puts("\n");
+    uart_puts("Board revision is : 0x");
+    uart_hex(board_revision);
+    uart_puts("\n");
+
+    uart_puts("ARM memory base in bytes : 0x");
+    uart_hex(arm_memory_base);
+    uart_puts("\n");
+    uart_puts("ARM memory size in bytes : 0x");
+    uart_hex(arm_memory_size);
+    uart_puts("\n");
+    uart_puts("DTB base address: 0x");
+    uart_hex((unsigned long long)DTB_PLACE);
+    uart_puts("\n");
     
-    unsigned int arm_mem_base_addr;
-    unsigned int arm_mem_size;
+    // char* string = malloc(8);
 
-    get_arm_memory_info(&arm_mem_base_addr,&arm_mem_size);
-    uart_async_puts("ARM memory base address in bytes : 0x");
-    uart_async_hex(arm_mem_base_addr);
-    uart_async_puts("\n");
-    uart_async_puts("ARM memory size in bytes : 0x");
-    uart_async_hex(arm_mem_size);
-    uart_async_puts("\n");
-    uart_async_puts("DTB base address: 0x");
-    uart_async_hex((unsigned long long)DTB_PLACE);
-    uart_async_puts("\n");
-    
-    char* string = malloc(8);
+    // uart_puts("malloc(8) address: 0x");
+    // uart_hex((unsigned long long)string);
+    // uart_puts("\n");
 
-    uart_async_puts("malloc(8) address: 0x");
-    uart_async_hex((unsigned long long)string);
-    uart_async_puts("\n");
+    // string = malloc(4);
+    // uart_puts("malloc(8) address: 0x");
+    // uart_hex((unsigned long long)string);
+    // uart_puts("\n");
 
-    string = malloc(4);
-    uart_async_puts("malloc(8) address: 0x");
-    uart_async_hex((unsigned long long)string);
-    uart_async_puts("\n");
-
-    uart_async_puts("\n");
-    uart_async_puts("This is a simple shell for raspi3.\n");
-    uart_async_puts("type help for more information\n");
-    core_timer_interrupt_enable();
+    uart_puts("\n");
+    uart_puts("This is a simple shell for raspi3.\n");
+    uart_puts("type help for more information\n");
     upTime(NO_NEW_LINE);
+    core_timer_interrupt_enable();
 }
 
 void help(){
@@ -196,14 +214,17 @@ void help(){
     uart_async_puts("cat                        : print file content.\n");
     uart_async_puts("hello                      : print hello world!\n");
     uart_async_puts("clear                      : clear screen.\n");
-    uart_async_puts("dtb list -a                : list device tree.\n");
+    uart_async_puts("dtb list -a                : list device tree.\n\n");
+    uart_async_puts("reboot                     : reboot raspberry pi.\n");
+    uart_async_puts("reboot now                 : reboot raspberry pi immediately.\n");
+    uart_async_puts("reboot -c                  : cancel reboot.\n\n");
     uart_async_puts("two_second                 : start two second interrupt.\n");
     uart_async_puts("two_second -c              : cancel two second interrupt.\n");
     uart_async_puts("setTimeout <sec> <msg>     : test timer multiplex.\n");
     uart_async_puts("test timer                 : test timer multiplex.\n");
-    uart_async_puts("reboot                     : reboot raspberry pi.\n");
-    uart_async_puts("reboot now                 : reboot raspberry pi immediately.\n");
-    uart_async_puts("reboot -c                  : cancel reboot.\n");
+    uart_async_puts("test page                  : test buddy system page allocation.\n");
+    uart_async_puts("test chunk                 : test chunk size allocation.\n");
+    uart_async_puts("test reserve               : test malloc init reserve memory.\n");
 
 }
 
@@ -258,40 +279,168 @@ void exefile(void *filename) {
     }
 }
 
-void test_malloc()
+void check_all_free_list()
 {
+    for (int i=0; i<=MAX_ORDER; i++)
+    {
+        show_free_list(i);
+    }
+}
+
+void test_page()
+{
+    DEBUG = 1;
+    // check_all_free_list();
     uart_async_puts("allocate 0x0f00\n");
     void *a = alloc_pages(0x0f00);
-    uart_async_hex(a);
+    uart_async_puts("address: 0x");
+    uart_async_hex((unsigned long long)a);
     uart_async_puts("\n");
     // check_all_free_list();
+    uart_async_getc(ECHO_OFF);
+    uart_async_puts("free 0x");
+    uart_async_hex((unsigned long long)a);
+    uart_async_puts("\n");
     free_pages(a);
     // check_all_free_list();
 
     uart_async_getc(ECHO_OFF);
     uart_async_puts("\nallocate 0x1000\n");
     void *b = alloc_pages(0x1000);
-    uart_async_hex(b);
+    uart_async_hex((unsigned long long)b);
     uart_async_puts("\n");
     // check_all_free_list();
-    // free_pages(b);
+    uart_async_getc(ECHO_OFF);
+    uart_async_puts("free 0x");
+    uart_async_hex((unsigned long long)b);
+    uart_async_puts("\n");
+    free_pages(b);
     // check_all_free_list();
     
     uart_async_getc(ECHO_OFF);
     uart_async_puts("\nallocate 0x1100\n");
     void *c = alloc_pages(0x1100);
-    uart_async_hex(c);
+    uart_async_hex((unsigned long long)c);
     uart_async_puts("\n");
     // check_all_free_list();
-    // free_pages(c);
+    uart_async_puts("free 0x");
+    uart_async_hex((unsigned long long)c);
+    uart_async_puts("\n");
+    free_pages(c);
     // check_all_free_list();
     
     uart_async_getc(ECHO_OFF);
     uart_async_puts("\nallocate 0x4000\n");
     void *d = alloc_pages(0x4000);
-    uart_async_hex(d);
+    uart_async_hex((unsigned long long)d);
     uart_async_puts("\n");
     // check_all_free_list();
-    // free_pages(d);
+    uart_async_puts("free 0x");
+    uart_async_hex((unsigned long long)d);
+    uart_async_puts("\n");
+    free_pages(d);
     // check_all_free_list();
+    DEBUG = 0;
+}
+
+void test_chunk()
+{
+    DEBUG = 1;
+    uart_async_getc(ECHO_OFF);
+    uart_async_puts("\nallocate 0x1f\n");
+    void *a = alloc_chunk(0x1f);
+    uart_async_hex((unsigned long long)a);
+    uart_async_puts("\n\n");
+
+    for (int i=0; i<127; i++) {
+        uart_async_hex((unsigned long long)alloc_chunk(0x1f));
+        uart_async_puts("\t");
+        uart_async_int(i);
+        uart_async_puts("\n");
+    }
+    uart_async_puts("\n");
+    
+    uart_async_getc(ECHO_OFF);
+    uart_async_puts("\nallocate 0x1f\n");
+    void *b = alloc_chunk(0x1f);
+    uart_async_hex((unsigned long long)b);
+    uart_async_puts("\n");
+
+
+    void *ptr[64];
+
+    uart_async_getc(ECHO_OFF);
+    uart_async_puts("\nallocate 0x40\n");
+    ptr[0] = alloc_chunk(0x40);
+    uart_async_hex((unsigned long long)ptr[0]);
+    uart_async_puts("\n\n");
+
+    for (int i=1; i<64; i++) {
+        ptr[i] = alloc_chunk(0x40);
+        uart_async_hex((unsigned long long)ptr[i]);
+        uart_async_puts("\t");
+        uart_async_int(i);
+        uart_async_puts("\n");
+    }
+
+    uart_async_puts("\nallocate 0x40\n");
+    void *c = alloc_chunk(0x40);
+    uart_async_hex((unsigned long long)c);
+    
+    uart_async_puts("\nfree:\n");
+    
+    for (int i=0; i<64; i++) {
+        free_chunk(ptr[i]);
+    }
+    uart_async_puts("\n");
+    
+    
+    uart_async_getc(ECHO_OFF);
+    uart_async_puts("\nallocate 0x40\n");
+    void *d = alloc_chunk(0x40);
+    uart_async_hex((unsigned long long)d);
+    uart_async_puts("\n");
+
+
+    free_chunk(a);
+    free_chunk(b);
+    // free_chunk(c);
+    free_chunk(d);
+    DEBUG = 0;
+}
+
+void test_kmalloc()
+{
+    DEBUG = 1;
+    void *chunk_ptr[5];
+    void *page_ptr[11];
+    for (int i = 0; i<5; i++)
+    {
+        chunk_ptr[i] = kmalloc(CHUNK_SIZE << i);
+    }
+
+    for (int i = 0; i<11; i++)
+    {
+        page_ptr[i] = kmalloc(PAGE_SIZE << i);
+    }
+
+    
+    for (int i = 0; i<5; i++)
+    {
+        kfree(chunk_ptr[i]);
+    }
+
+    for (int i = 0; i<11; i++)
+    {
+        kfree(page_ptr[i]);
+    }
+    DEBUG = 0;
+
+}
+
+void test_reserve()
+{
+    DEBUG = 1;
+    memory_reserve(0x234, 0x4203);
+    DEBUG = 0;
 }

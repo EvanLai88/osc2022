@@ -4,7 +4,7 @@
 
 int exe(void *file) {
     
-    void *user_stack = malloc(USER_STACK_SIZE);
+    void *user_stack = kmalloc(USER_STACK_SIZE);
     // uart_hex(USER_STACK_SIZE);
     // uart_puts("\n");
     // uart_hex((unsigned long long)file);
@@ -29,5 +29,6 @@ int exe(void *file) {
             "r" (user_stack+USER_STACK_SIZE)     // stack grow from high to low
     );
 
+    kfree(user_stack);
     return 0;
 }

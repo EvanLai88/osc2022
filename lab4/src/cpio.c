@@ -8,6 +8,7 @@
 #endif
 
 void *CPIO_BASE;
+void *CPIO_END;
 
 
 static unsigned long align_up(unsigned long n, unsigned long align)

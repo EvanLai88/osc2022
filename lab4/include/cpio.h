@@ -1,6 +1,7 @@
 #ifndef _LIB_CPIO_H_
 #define _LIB_CPIO_H_
 
+#include "compiler.h"
 
 /* Magic identifiers for the "cpio" file format. */
 #define CPIO_HEADER_MAGIC "070701"
