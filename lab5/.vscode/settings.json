@@ -1,0 +1,20 @@
+{
+    "files.associations": {
+        "dtb.h": "c",
+        "cpio.h": "c",
+        "fdt.h": "c",
+        "uart.h": "c",
+        "malloc.h": "c",
+        "gpio.h": "c",
+        "exceptionhandler.h": "c",
+        "timer.h": "c",
+        "exception.h": "c",
+        "time.h": "c",
+        "cstdarg": "c",
+        "cstdio": "c",
+        "lib.h": "c",
+        "shell.h": "c",
+        "compiler.h": "c",
+        "mbox.h": "c"
+    }
+}
