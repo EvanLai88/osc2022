@@ -15,6 +15,8 @@
         "lib.h": "c",
         "shell.h": "c",
         "compiler.h": "c",
-        "mbox.h": "c"
+        "mbox.h": "c",
+        "signal.h": "c",
+        "sched.h": "c"
     }
 }

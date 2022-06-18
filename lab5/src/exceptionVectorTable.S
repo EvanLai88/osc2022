@@ -1,6 +1,7 @@
 // save general registers to stack
+.global save_all
 .macro save_all
-    sub sp, sp, 32 * 12
+    sub sp, sp, 32 * 9
     stp x0, x1, [sp ,16 * 0]
     stp x2, x3, [sp ,16 * 1]
     stp x4, x5, [sp ,16 * 2]
@@ -20,17 +21,18 @@
 
     //using for nested interrupt
     mrs x0,  spsr_el1
-    str x0,  [sp, 16 * 16]
+    str x0,  [sp, 16 * 15 + 8]
     mrs x0,  elr_el1
-    str x0,  [sp, 16 * 17]
-    //mrs x0,  sp_el0
-    //str x0,  [sp, 16 * 18]
-    //mrs x0,  sp_el1
-    //str x0,  [sp, 16 * 19]
+    str x0,  [sp, 16 * 16]
+    mrs x0,  sp_el0
+    str x0,  [sp, 16 * 16 + 8]
+
     ldp x0, x1, [sp ,16 * 0]  // restore x0
+
 .endm
 
-// load general registers from stack
+// load general registers from 
+.global load_all
 .macro load_all
     ldp x0, x1, [sp ,16 * 0]
     ldp x2, x3, [sp ,16 * 1]
@@ -50,18 +52,16 @@
     ldr x30, [sp, 16 * 15]
 
     //using for nested interrupt
-    ldr x0, [sp, 16 * 16]
+    ldr x0, [sp, 16 * 15 + 8]
     msr spsr_el1,x0
-    ldr x0,  [sp, 16 * 17]
+    ldr x0,  [sp, 16 * 16]
     msr elr_el1, x0
-    //ldr x0,  [sp, 16 * 18]
-    //msr sp_el0, x0
-    //ldr x0,  [sp, 16 * 19]
-    //msr sp_el1, x0
+    ldr x0,  [sp, 16 * 16 + 8]
+    msr sp_el0, x0
 
     ldp x0, x1, [sp ,16 * 0]  // restore x0
     
-    add sp, sp, 32 * 12
+    add sp, sp, 32 * 9
 .endm
 
 .macro    ventry    label
@@ -95,15 +95,15 @@ exception_vector_table:
     ventry	sync_invalid_el0_32			// Synchronous 32-bit EL0
     ventry	irq_invalid_el0_32			// IRQ 32-bit EL0
     ventry	fiq_invalid_el0_32			// FIQ 32-bit EL0
-    ventry	error_invalid_el0_32			// Error 32-bit EL0
+    ventry	error_invalid_el0_32		// Error 32-bit EL0
 
 
 
 sync_invalid_el1t:
-    save_all
+    //save_all
     mov x0,0
     bl invalid_exception_router
-    load_all
+    //load_all
     eret
 irq_invalid_el1t:
     save_all
@@ -127,14 +127,14 @@ error_invalid_el1t:
 
 
 sync_el1h:
-    save_all
+    //save_all
     mov x0,4
     bl invalid_exception_router
-    load_all
+    //load_all
     eret
 irq_el1h:
     save_all
-    mov x0,5
+    mov x0, sp  // trap_frame
     bl irq_router
     load_all
     eret
@@ -155,13 +155,13 @@ error_invalid_el1h:
 
 sync_el0_64:
     save_all
-    mov x0,8
+    mov x0, sp  // trap_frame
     bl sync_64_router
     load_all
     eret
 irq_el0_64:
     save_all
-    mov x0,9
+    mov x0, sp  // trap_frame
     bl irq_router
     load_all
     eret

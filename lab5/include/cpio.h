@@ -91,4 +91,7 @@ void cpio_ls(void *archive);
  */
 void cpio_cat(void *archive, char *filename);
 
+size_t cpio_file_size(char *filename);
+void *cpio_file_start(char *filename);
+
 #endif /* _LIB_CPIO_H_ */

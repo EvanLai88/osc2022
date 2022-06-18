@@ -59,16 +59,16 @@ void kmalloc_init()
     uart_puts("\n");
     uart_puts("\033[2J\033[H");
     dtb_reserve_mem();
-    uart_getc(ECHO_OFF);
+    uart_getc();
     uart_puts("kernel img:\n");
     memory_reserve(0x80000, (uint64_t)&_end);
-    uart_getc(ECHO_OFF);
+    uart_getc();
     uart_puts("startup malloc:\n");
     memory_reserve((uint64_t)&_heap_start, (uint64_t)top);
-    uart_getc(ECHO_OFF);
+    uart_getc();
     uart_puts("CPIO:\n");
     memory_reserve((uint64_t)CPIO_BASE, (uint64_t)CPIO_END);
-    uart_getc(ECHO_OFF);
+    uart_getc();
     uart_puts("Kernel Stack:\n");
     memory_reserve(arm_memory_size - KSTACK_SIZE, arm_memory_size);
 }
@@ -315,38 +315,38 @@ void free_chunk(void *ptr)
 
 void *kmalloc(uint64_t size)
 {
-    disable_interrupt();
+    lock();
     if (size <= (CHUNK_SIZE << MAX_CHUNK_ORDER)) {
         void *ptr = alloc_chunk(size);
-        enable_interrupt();
+        unlock();
         return ptr;
     }
     
     if (size <= (PAGE_SIZE << MAX_ORDER))
     {
         void *ptr = alloc_pages(size);
-        enable_interrupt();
+        unlock();
         return ptr;
     }
 
     uart_puts("\n\t!!!!! kmalloc error: exceed max order!!!!!!\n");
-    enable_interrupt();
+    unlock();
     return (void *) ((uint64_t)arm_memory_size + 1);
 }
 
 void kfree(void *ptr)
 {
     frame_t *curr = &frame_array[(unsigned long long)(ptr-PAGE_BASE)>>12];
-    disable_interrupt();
+    lock();
     if(curr->chunk_order == -1)
     {
         free_pages(ptr);
-        enable_interrupt();
+        unlock();
         return;
     }
 
     free_chunk(ptr);
-    enable_interrupt();
+    unlock();
 }
 
 /**

@@ -26,12 +26,11 @@ void add_task(void *task_function,unsigned long long priority){
     // enable_interrupt();
     the_task->priority = priority;
     the_task->task_function = task_function;
-    INIT_LIST_HEAD(&the_task->listhead);
 
     struct list_head *curr;
 
     /* critical section */
-    disable_interrupt();
+    lock();
     list_for_each(curr, task_list)
     {
         if (((task_t *)curr)->priority > the_task->priority)
@@ -44,33 +43,35 @@ void add_task(void *task_function,unsigned long long priority){
     {
         list_add_tail(&the_task->listhead, task_list);
     }
-    enable_interrupt();
+    unlock();
 }
 
 void run_preemptive_tasks(){
-    enable_interrupt();
-    while (!list_empty(task_list))
+
+    while (1)
     {
-        /* critical section */
-        disable_interrupt();
+        lock();
+        if (list_empty(task_list))
+        {
+            unlock();
+            break;
+        }
+
         task_t *the_task = (task_t *)task_list->next;
         if (curr_task_priority <= the_task->priority)
         {
-            enable_interrupt();
+            unlock();
             break;
         }
 
         list_del_entry((struct list_head *)the_task);
         int prev_task_priority = curr_task_priority;
         curr_task_priority = the_task->priority;
-        enable_interrupt();
-
+        
+        unlock();
         run_task(the_task);
 
-        /* critical section */
-        disable_interrupt();
         curr_task_priority = prev_task_priority;
-        enable_interrupt();
         
         int tmp = DEBUG;
         DEBUG = 0;

@@ -34,8 +34,11 @@ void disable_mini_uart_r_interrupt();
 void enable_mini_uart_w_interrupt();
 void disable_mini_uart_w_interrupt();
 
+void uart_disable_echo();
+void uart_enable_echo();
+
 void  uart_send(unsigned int c);
-char  uart_getc(int e);
+char  uart_getc();
 
 void uart_async_putc(char c);
 char uart_async_getc();

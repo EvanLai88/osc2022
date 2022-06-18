@@ -225,3 +225,59 @@ void cpio_cat(void *archive, char *filename) {
         uart_async_puts("File does not exists.\n");
     }
 }
+
+size_t cpio_file_size(char *filename)
+{
+    char *current_filename, *tmp;
+    struct cpio_header *header, *next;
+    void *result;
+    int error;
+    unsigned long size = 0;
+    int exist = 0;
+
+    tmp = filename;
+    header = CPIO_BASE;
+    while(header != 0) {
+        error = cpio_parse_header(header, &current_filename, &size, &result, &next);
+        if (error == 1) {
+            break;
+        }
+        if (cpio_strncmp( tmp, current_filename, cpio_strlen(current_filename)) == 0) {
+            exist = 1;
+            return size;
+        }
+        header = next;
+    }
+    if (exist == 0) {
+        uart_async_puts("File does not exists.\n");
+    }
+    return (size_t) -1;
+}
+
+void *cpio_file_start(char *filename)
+{
+    char *current_filename, *tmp;
+    struct cpio_header *header, *next;
+    void *result;
+    int error;
+    unsigned long size;
+    int exist = 0;
+
+    tmp = filename;
+    header = CPIO_BASE;
+    while(header != 0) {
+        error = cpio_parse_header(header, &current_filename, &size, &result, &next);
+        if (error == 1) {
+            break;
+        }
+        if (cpio_strncmp( tmp, current_filename, cpio_strlen(current_filename)) == 0) {
+            exist = 1;
+            return result;
+        }
+        header = next;
+    }
+    if (exist == 0) {
+        uart_async_puts("File does not exists.\n");
+    }
+    return result;
+}

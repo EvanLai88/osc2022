@@ -5,6 +5,7 @@
 #include "task.h"
 #include "malloc.h"
 #include "fdt.h"
+#include "sched.h"
 
 extern char *DTB_PLACE;
 
@@ -12,7 +13,7 @@ void main(char *dtb)
 {
     DTB_PLACE = dtb;
     uart_init();
-    uart_getc(ECHO_OFF);
+    uart_getc();
 
     traverse_device_tree(DTB_PLACE,dtb_callback_initramfs);
     task_list_init();
@@ -21,5 +22,6 @@ void main(char *dtb)
     core_timer_enable();
     enable_mini_uart_interrupt();
     kmalloc_init();
+    init_thread_sched();
     shell();
 }

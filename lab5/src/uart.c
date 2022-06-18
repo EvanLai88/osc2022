@@ -12,6 +12,8 @@ char Rx_buf[BUFFER_SIZE] = {};
 unsigned int Rx_buf_r_idx = 0;
 unsigned int Rx_buf_w_idx = 0;
 
+int echo_flag = 1;
+
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
  */
@@ -75,19 +77,30 @@ void disable_mini_uart_w_interrupt()
     *AUX_MU_IER &= ~(2);
 }
 
+void uart_disable_echo()
+{
+    echo_flag = 0;
+}
+
+void uart_enable_echo()
+{
+    echo_flag = 1;
+}
+
 void  uart_send(unsigned int c) {
     do{asm volatile("nop");}while(!(*AUX_MU_LSR&0x20));
     *AUX_MU_IO=c;
 }
 
-char uart_getc(int e) {
+char uart_getc() {
     char r;
     do{asm volatile("nop");}while(!(*AUX_MU_LSR&0x01));
     r=(char)(*AUX_MU_IO);
-    if (e == ECHO) {
+    
+    if (echo_flag == ECHO) {
         echo(r);
     }
-    if (e == ECHO_OFF) {
+    if (echo_flag == ECHO_OFF) {
         return r;
     }
     return r=='\r'?'\n':r;
@@ -100,11 +113,11 @@ void uart_async_putc(char c)
         enable_mini_uart_w_interrupt();
 
     // critical section
-    disable_interrupt();
+    lock();
     Tx_buf[Tx_buf_w_idx++] = c;
     if (Tx_buf_w_idx >= BUFFER_SIZE)
         Tx_buf_w_idx = 0;
-    enable_interrupt();
+    unlock();
     enable_mini_uart_w_interrupt();
 }
 
@@ -115,11 +128,11 @@ char uart_async_getc()
         enable_mini_uart_r_interrupt();
 
     // critical section
-    disable_interrupt();
+    lock();
     char r = Rx_buf[Rx_buf_r_idx++];
     if (Rx_buf_r_idx >= BUFFER_SIZE)
         Rx_buf_r_idx = 0;
-    enable_interrupt();
+    unlock();
     return r;
 }
 
@@ -130,7 +143,7 @@ void uart_interrupt_r_handler()
         disable_mini_uart_r_interrupt();
         return;
     }
-    Rx_buf[Rx_buf_w_idx++] = uart_getc(ECHO);
+    Rx_buf[Rx_buf_w_idx++] = uart_getc();
     if (Rx_buf_w_idx >= BUFFER_SIZE)
         Rx_buf_w_idx = 0;
 
@@ -195,7 +208,7 @@ char* uart_gets(char *buf) {
     count = 0;
     left_count = 0;
     state = 0;
-    for (s = buf,count = 0; (c = uart_getc(ECHO)) != '\n' && count!=BUFFER_SIZE-1 ;count++) {
+    for (s = buf,count = 0; (c = uart_getc()) != '\n' && count!=BUFFER_SIZE-1 ;count++) {
         
         if(state == 0) {
             

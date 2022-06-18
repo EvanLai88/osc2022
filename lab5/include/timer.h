@@ -44,6 +44,6 @@ void timer_event_callback(timer_event_t *timer_event);
 void core_timer_handler();
 void two_seconds(char *arg);
 void setTimeout(char *arg);
-void add_timer(void *callback, unsigned long long timeout, char *args);
+void add_timer(void *callback, unsigned long long timeout, char *args, int bytick);
 
 #endif

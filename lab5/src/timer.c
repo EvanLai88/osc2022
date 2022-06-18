@@ -2,6 +2,7 @@
 #include "uart.h"
 #include "malloc.h"
 #include "lib.h"
+#include "exception.h"
 
 extern int DEBUG;
 
@@ -10,6 +11,11 @@ int two_second_recurrent = 0;
 
 void timer_list_init()
 {
+    uint64_t tmp;
+    asm volatile("mrs %0, cntkctl_el1": "=r"(tmp));
+    tmp |= 1;
+    asm volatile("msr cntkctl_el1, %0":: "r"(tmp));
+
     timer_event_list = malloc(sizeof(list_head_t));
     INIT_LIST_HEAD(timer_event_list);
 }
@@ -144,15 +150,16 @@ void timer_event_callback(timer_event_t *timer_event)
 
 void core_timer_handler()
 {
-    if (!list_empty(timer_event_list)) {
-        timer_event_callback((timer_event_t *)timer_event_list->next);
-    }
-    else {
-        // disable_mini_uart_interrupt();
-        // uart_putln("2 timer event list empty!!!");
-        // enable_mini_uart_interrupt();
+    lock();
+    if (list_empty(timer_event_list))
+    {
         set_timeout_after(30);
+        unlock();
+        return;
     }
+
+    timer_event_callback((timer_event_t *)timer_event_list->next);
+    unlock();
 }
 
 void two_seconds(char *arg)
@@ -162,7 +169,7 @@ void two_seconds(char *arg)
         disable_mini_uart_interrupt();
         uart_putln(arg);
         enable_mini_uart_interrupt();
-        add_timer(two_seconds, 2, arg);
+        add_timer(two_seconds, 2, arg, 0);
     }
     else {
         set_timeout_after(2);
@@ -178,7 +185,7 @@ void setTimeout(char *arg)
     enable_mini_uart_interrupt();
 }
 
-void add_timer(void *callback, unsigned long long timeout, char *args)
+void add_timer(void *callback, unsigned long long timeout, char *args, int bytick)
 {
     int tmp = DEBUG;
     DEBUG = 0;
@@ -190,9 +197,15 @@ void add_timer(void *callback, unsigned long long timeout, char *args)
 
     strcpy(the_timer_event->args, args);
 
-    the_timer_event->interrupt_time = get_tick_after(timeout);
+    if(bytick == 0)
+    {
+        the_timer_event->interrupt_time = get_tick_after(timeout);
+    }else
+    {
+        the_timer_event->interrupt_time = get_tick_after(0) + timeout;
+    }
+
     the_timer_event->callback = callback;
-    INIT_LIST_HEAD(&the_timer_event->listhead);
 
     // add the timer_event into timer_event_list (sorted)
     list_head_t *curr;

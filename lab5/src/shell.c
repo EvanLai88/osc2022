@@ -10,6 +10,7 @@
 #include "exe.h"
 #include "timer.h"
 #include "exception.h"
+#include "sched.h"
 
 extern char* DTB_PLACE;
 extern int two_second_recurrent;
@@ -68,13 +69,13 @@ void shell(){
             *end_message = '\0';
             char *seconds = end_message + 1;
             upTime(NO_NEW_LINE);
-            add_timer(setTimeout, atoi(seconds), message);
+            add_timer(setTimeout, atoi(seconds), message, 0);
             continue;
         }
 
         if ( strcmp(cmd, "two_second") == 0 ) {
             two_second_recurrent = 1;
-            add_timer(two_seconds, 2, "two_second!!");
+            add_timer(two_seconds, 2, "two_second!!", 0);
             continue;
         }
 
@@ -132,17 +133,17 @@ void shell(){
             uart_async_puts("\r");
             upTime(NO_NEW_LINE);
             uart_async_puts("setTimeout aaa 30\n");
-            add_timer(setTimeout, 30, "aaa");
+            add_timer(setTimeout, 30, "aaa", 0);
             uart_async_puts("setTimeout bbb 20\n");
-            add_timer(setTimeout, 20, "bbb");
+            add_timer(setTimeout, 20, "bbb", 0);
             uart_async_puts("setTimeout ccc 25\n");
-            add_timer(setTimeout, 25, "ccc");
+            add_timer(setTimeout, 25, "ccc", 0);
             uart_async_puts("setTimeout ddd 15\n");
-            add_timer(setTimeout, 15, "ddd");
+            add_timer(setTimeout, 15, "ddd", 0);
             uart_async_puts("setTimeout eee 10\n");
-            add_timer(setTimeout, 10, "eee");
+            add_timer(setTimeout, 10, "eee", 0);
             uart_async_puts("setTimeout fff 5\n");
-            add_timer(setTimeout, 5,  "fff");
+            add_timer(setTimeout, 5,  "fff", 0);
             continue;
         }
 
@@ -172,7 +173,7 @@ void shell(){
 }
 
 void shell_prompt(){
-    uart_getc(ECHO_OFF);
+    uart_getc();
     uart_puts("\n");
     uart_puts("\033[2J\033[H");
     unsigned int board_revision;
@@ -270,7 +271,7 @@ void exefile(void *filename) {
             uart_async_puts(" address: ");
             uart_async_hex((unsigned long long)result);
             uart_async_puts("\n");
-            exe(result);
+            exec_thread(result, size);
             return;
         }
         header = next;
@@ -299,27 +300,27 @@ void test_page()
     uart_hex((unsigned long long)a);
     uart_puts("\n");
     // check_all_free_list();
-    uart_getc(ECHO_OFF);
+    uart_getc();
     uart_puts("free 0x");
     uart_hex((unsigned long long)a);
     uart_puts("\n");
     free_pages(a);
     // check_all_free_list();
 
-    uart_getc(ECHO_OFF);
+    uart_getc();
     uart_puts("\nallocate 0x1000\n");
     void *b = alloc_pages(0x1000);
     uart_hex((unsigned long long)b);
     uart_puts("\n");
     // check_all_free_list();
-    uart_getc(ECHO_OFF);
+    uart_getc();
     uart_puts("free 0x");
     uart_hex((unsigned long long)b);
     uart_puts("\n");
     free_pages(b);
     // check_all_free_list();
     
-    uart_getc(ECHO_OFF);
+    uart_getc();
     uart_puts("\nallocate 0x1100\n");
     void *c = alloc_pages(0x1100);
     uart_hex((unsigned long long)c);
@@ -331,7 +332,7 @@ void test_page()
     free_pages(c);
     // check_all_free_list();
     
-    uart_getc(ECHO_OFF);
+    uart_getc();
     uart_puts("\nallocate 0x4000\n");
     void *d = alloc_pages(0x4000);
     uart_hex((unsigned long long)d);
@@ -350,7 +351,7 @@ void test_chunk()
 {
     DEBUG = 1;
     disable_interrupt();
-    uart_getc(ECHO_OFF);
+    uart_getc();
     uart_puts("\nallocate 0x1f\n");
     void *a = alloc_chunk(0x1f);
     uart_hex((unsigned long long)a);
@@ -364,7 +365,7 @@ void test_chunk()
     }
     uart_puts("\n");
     
-    uart_getc(ECHO_OFF);
+    uart_getc();
     uart_puts("\nallocate 0x1f\n");
     void *b = alloc_chunk(0x1f);
     uart_hex((unsigned long long)b);
@@ -373,7 +374,7 @@ void test_chunk()
 
     void *ptr[64];
 
-    uart_getc(ECHO_OFF);
+    uart_getc();
     uart_puts("\nallocate 0x40\n");
     ptr[0] = alloc_chunk(0x40);
     uart_hex((unsigned long long)ptr[0]);
@@ -399,7 +400,7 @@ void test_chunk()
     uart_puts("\n");
     
     
-    uart_getc(ECHO_OFF);
+    uart_getc();
     uart_puts("\nallocate 0x40\n");
     void *d = alloc_chunk(0x40);
     uart_hex((unsigned long long)d);
@@ -432,7 +433,7 @@ void test_kmalloc()
         uart_hex((uint64_t)chunk_ptr[i]);
         uart_puts("\n\n");
     }
-    uart_getc(ECHO_OFF);
+    uart_getc();
     for (int i = 0; i<11; i++)
     {
         uart_puts("kmalloc size:\t0x");
@@ -446,7 +447,7 @@ void test_kmalloc()
         uart_puts("\n\n");
     }
 
-    uart_getc(ECHO_OFF);
+    uart_getc();
     for (int i = 0; i<5; i++)
     {
         uart_puts("kfree address:\t0x");
@@ -457,7 +458,7 @@ void test_kmalloc()
         disable_interrupt();
     }
 
-    uart_getc(ECHO_OFF);
+    uart_getc();
     for (int i = 0; i<11; i++)
     {
         uart_puts("kfree address:\t0x");
