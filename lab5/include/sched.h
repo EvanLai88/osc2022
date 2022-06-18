@@ -48,11 +48,9 @@ typedef struct thread
 {
     list_head_t         listhead;
     int                 pid;
-    // int                 state;
-    // int                 is_parent;
+    int                 state;
+    int                 is_parent;
     int                 signal_is_checking;
-    int                 isused;
-    int                 iszombie;
 
     void                (*signal_handler[SIGNAL_MAX+1])();
     int                 sigcount[SIGNAL_MAX + 1];

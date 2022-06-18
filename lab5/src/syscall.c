@@ -38,7 +38,6 @@ size_t uartwrite(trapframe_t *tpf,const char buf[], size_t size)
     return i;
 }
 
-//In this lab, you won’t have to deal with argument passing
 int exec(trapframe_t *tpf,const char *name, char *const argv[])
 {
     curr_thread->datasize = cpio_file_size((char*)name);
@@ -48,7 +47,7 @@ int exec(trapframe_t *tpf,const char *name, char *const argv[])
         curr_thread->data[i] = new_data[i];
     }
 
-    //clear signal handler
+    //signal handler
     for (int i = 0; i <= SIGNAL_MAX; i++)
     {
         curr_thread->signal_handler[i] = signal_default_handler;
@@ -63,43 +62,45 @@ int exec(trapframe_t *tpf,const char *name, char *const argv[])
 int fork(trapframe_t *tpf)
 {
     lock();
-    thread_t *newt = thread_create(curr_thread->data);
-
-    //copy signal handler
-    for (int i = 0; i <= SIGNAL_MAX;i++)
-    {
-        newt->signal_handler[i] = curr_thread->signal_handler[i];
-    }
-
-    newt->datasize = curr_thread->datasize;
     int parent_pid = curr_thread->pid;
     thread_t *parent_thread_t = curr_thread;
+    
+    thread_t *newt = thread_create(curr_thread->data);
+    newt->datasize = curr_thread->datasize;
 
-    //Cannot copy data because there are a lot of ret addresses on stack
-    //copy user stack into new process
+    //user stack
     for (int i = 0; i < UT_STACK_SIZE; i++)
     {
         newt->ustack[i] = curr_thread->ustack[i];
     }
 
-    //copy stack into new process
+    //kernel stack
     for (int i = 0; i < KT_STACK_SIZE; i++)
     {
         newt->kstack[i] = curr_thread->kstack[i];
     }
     
+    //signal handler
+    for (int i = 0; i <= SIGNAL_MAX;i++)
+    {
+        newt->signal_handler[i] = curr_thread->signal_handler[i];
+    }
+
     // uart_putln("111");
     store_context(get_current());
     // uart_putln("222");
-    // for child
-    if( parent_pid != curr_thread->pid)
+    if(curr_thread->pid != parent_pid)
     {
-        goto child;
+        tpf = (trapframe_t*)((char *)tpf + (unsigned long)newt->kstack - (unsigned long)parent_thread_t->kstack);
+        tpf->sp_el0 += (unsigned long)newt->ustack - (unsigned long)parent_thread_t->ustack;
+        tpf->x0 = 0;
+        return 0;
     }
     // uart_putln("333");
 
     newt->context = curr_thread->context;
-    unsigned long offset = newt->kstack - curr_thread->kstack;
+    //kstack offset
+    unsigned long offset = (unsigned long)newt->kstack - (unsigned long)curr_thread->kstack;
     newt->context.fp += offset;
     newt->context.sp += offset;
 
@@ -107,12 +108,6 @@ int fork(trapframe_t *tpf)
 
     tpf->x0 = newt->pid;
     return newt->pid;
-
-child:
-    tpf = (trapframe_t*)((char *)tpf + (unsigned long)newt->kstack - (unsigned long)parent_thread_t->kstack); // move tpf
-    tpf->sp_el0 += newt->ustack - parent_thread_t->ustack;
-    tpf->x0 = 0;
-    return 0;
 }
 
 void exit(trapframe_t *tpf, int status)
@@ -154,12 +149,12 @@ int syscall_mbox_call(trapframe_t *tpf, unsigned char ch, unsigned int *mbox)
 void kill(trapframe_t *tpf,int pid)
 {
     lock();
-    if (pid >= PID_MAX || pid < 0  || !threads[pid].isused)
+    if (pid >= PID_MAX || pid < 0  || threads[pid].state == UNUSED)
     {
         unlock();
         return;
     }
-    threads[pid].iszombie = 1;
+    threads[pid].state = ZOMBIE;
     unlock();
     schedule();
 }
@@ -173,7 +168,7 @@ void signal_register(int signal, void (*handler)())
 
 void signal_kill(int pid, int signal)
 {
-    if (pid > PID_MAX || pid < 0 || !threads[pid].isused)return;
+    if (pid > PID_MAX || pid < 0 || threads[pid].state == UNUSED)return;
 
     lock();
     threads[pid].sigcount[signal]++;

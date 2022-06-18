@@ -169,7 +169,7 @@ void two_seconds(char *arg)
         disable_mini_uart_interrupt();
         uart_putln(arg);
         enable_mini_uart_interrupt();
-        add_timer(two_seconds, 2, arg, 0);
+        add_timer(two_seconds, 2, arg, False);
     }
     else {
         set_timeout_after(2);
@@ -197,12 +197,12 @@ void add_timer(void *callback, unsigned long long timeout, char *args, int bytic
 
     strcpy(the_timer_event->args, args);
 
-    if(bytick == 0)
-    {
-        the_timer_event->interrupt_time = get_tick_after(timeout);
-    }else
+    if(bytick == True)
     {
         the_timer_event->interrupt_time = get_tick_after(0) + timeout;
+    }else
+    {
+        the_timer_event->interrupt_time = get_tick_after(timeout);
     }
 
     the_timer_event->callback = callback;

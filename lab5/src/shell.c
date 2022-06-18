@@ -69,13 +69,13 @@ void shell(){
             *end_message = '\0';
             char *seconds = end_message + 1;
             upTime(NO_NEW_LINE);
-            add_timer(setTimeout, atoi(seconds), message, 0);
+            add_timer(setTimeout, atoi(seconds), message, False);
             continue;
         }
 
         if ( strcmp(cmd, "two_second") == 0 ) {
             two_second_recurrent = 1;
-            add_timer(two_seconds, 2, "two_second!!", 0);
+            add_timer(two_seconds, 2, "two_second!!", False);
             continue;
         }
 
@@ -133,17 +133,17 @@ void shell(){
             uart_async_puts("\r");
             upTime(NO_NEW_LINE);
             uart_async_puts("setTimeout aaa 30\n");
-            add_timer(setTimeout, 30, "aaa", 0);
+            add_timer(setTimeout, 30, "aaa", False);
             uart_async_puts("setTimeout bbb 20\n");
-            add_timer(setTimeout, 20, "bbb", 0);
+            add_timer(setTimeout, 20, "bbb", False);
             uart_async_puts("setTimeout ccc 25\n");
-            add_timer(setTimeout, 25, "ccc", 0);
+            add_timer(setTimeout, 25, "ccc", False);
             uart_async_puts("setTimeout ddd 15\n");
-            add_timer(setTimeout, 15, "ddd", 0);
+            add_timer(setTimeout, 15, "ddd", False);
             uart_async_puts("setTimeout eee 10\n");
-            add_timer(setTimeout, 10, "eee", 0);
+            add_timer(setTimeout, 10, "eee", False);
             uart_async_puts("setTimeout fff 5\n");
-            add_timer(setTimeout, 5,  "fff", 0);
+            add_timer(setTimeout, 5,  "fff", False);
             continue;
         }
 
